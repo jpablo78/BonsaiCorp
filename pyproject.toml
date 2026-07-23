@@ -8,10 +8,20 @@ version = "0.1.0"
 description = "Optimización de packaging y logística para Bonsai Corp"
 requires-python = ">=3.11"
 dependencies = [
+    "ortools>=9.10,<10",
+]
+
+[project.optional-dependencies]
+# The default installation is intentionally open source and sufficient for the
+# core data, feasibility, cost and CP-SAT workflows.
+dev = ["pytest>=8,<9"]
+highs = ["highspy>=1.15,<2"]
+# These packages are used only by explicitly named experimental runners. A
+# solver license remains the responsibility of the local user.
+commercial = [
     "cplex>=22.2,<23",
     "docplex>=2.32,<3",
-    "highspy>=1.15,<2",
-    "ortools>=9.10,<10",
+    "gurobipy>=13,<14",
 ]
 
 [project.scripts]

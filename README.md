@@ -23,7 +23,26 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m bonsai validate-solution output/asignacion_optima.csv --data-dir .
 ```
 
+La instalación predeterminada depende solamente de OR-Tools. Para ejecutar la
+suite de pruebas: `pip install -e ".[dev]"`. Los runners de
+HiGHS, CPLEX y Gurobi son opcionales y no forman parte de la ruta soportada de
+producción. Para instalar HiGHS: `pip install -e ".[highs]"`. Los runners
+comerciales requieren además su paquete y licencia local; nunca se necesitan
+para consultar, validar o reproducir el cálculo de costo del baseline.
+
+Los CSV fuente y la consigna no se publican en este repositorio. Para ejecutar
+el modelo, deben colocarse en un directorio local y pasarse mediante
+`--data-dir`.
+
 La optimización resuelve un modelo CP-SAT por cada grosor permitido (3,0; 4,5; 5,0 mm) y conserva la mejor solución factible.
+
+## Arquitectura y solvers
+
+El núcleo mantenido está bajo `src/bonsai`: preparación de datos, geometría,
+generación de candidatos, costos, validación y optimización CP-SAT. El MIP de
+SCIP se ejecuta a través de OR-Tools. Los scripts de campañas y comparaciones
+con otros solvers se conservan como evidencia experimental, pero no son una
+dependencia del CLI principal. Ver [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 `clean-data` no modifica los archivos fuente: exporta una copia normalizada. En particular, estandariza `caja_grosor_mm` (por ejemplo, `2,5`, `2.5 mm` y `2.50` pasan a `2.5`) y conserva explícitamente los errores/inconsistencias históricas que no deben imputarse de forma silenciosa.
 

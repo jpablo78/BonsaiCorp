@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import re
 from pathlib import Path
@@ -13,21 +12,13 @@ from ortools.linear_solver import linear_solver_pb2
 
 from bonsai.config import FreightPolicy
 from bonsai.costs import evaluate_assignments
-from bonsai.data import load_prepared_data, parse_number
-from bonsai.decimal_candidates import (
-    decimal_external_from_internal,
-    decimal_product_fits_candidate,
-    generate_decimal_candidates,
-)
-from bonsai.geometry import boxes_per_pallet
+from bonsai.data import load_prepared_data
+from bonsai.decimal_candidates import generate_decimal_candidates
+from bonsai.decimal_io import validate_decimal_solution_csv, write_decimal_assignment_csv
 from bonsai.models import CandidateBox, Dimensions
 from bonsai.reporting import write_json
 from bonsai.scip_optimizer import solve_with_scip
-from bonsai.solution_validation import (
-    REQUIRED_OUTPUT_COLUMNS,
-    ValidationResult,
-    validate_solution_csv,
-)
+from bonsai.solution_validation import validate_solution_csv
 from run_gurobi_proto_neighborhood import _bound_usd, _gurobi_from_proto, _optional_model_attr, _status_name
 
 
@@ -66,74 +57,6 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _write_decimal_csv(
-    path: Path,
-    data,
-    assignment: dict[str, CandidateBox],
-    decimal_places: int,
-) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=REQUIRED_OUTPUT_COLUMNS)
-        writer.writeheader()
-        for product in data.products:
-            box = assignment[product.code]
-            writer.writerow(
-                {
-                    "codigo_producto": product.code,
-                    "caja_grosor_mm": f"{box.thickness_mm:g}",
-                    "caja_exterior_largo": f"{box.external.length:.{decimal_places}f}",
-                    "caja_exterior_ancho": f"{box.external.width:.{decimal_places}f}",
-                    "caja_exterior_alto": f"{box.external.height:.{decimal_places}f}",
-                }
-            )
-
-
-def _validate_decimal_csv(path: Path, data, policy: FreightPolicy):
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        rows = list(csv.DictReader(handle))
-    if tuple(rows[0]) != REQUIRED_OUTPUT_COLUMNS:
-        raise ValueError("decimal output columns differ from the Kaggle schema")
-    if {row["codigo_producto"] for row in rows} != {p.code for p in data.products}:
-        raise ValueError("decimal output product set differs from catalog")
-    products = data.product_by_code
-    assignment = {}
-    designs: dict[tuple[float, float, float, float], list[str]] = {}
-    for row in rows:
-        design = (
-            parse_number(row["caja_grosor_mm"]),
-            parse_number(row["caja_exterior_largo"]),
-            parse_number(row["caja_exterior_ancho"]),
-            parse_number(row["caja_exterior_alto"]),
-        )
-        designs.setdefault(design, []).append(row["codigo_producto"])
-    if {design[0] for design in designs} != {3.0}:
-        raise ValueError("decimal diagnostic must retain global 3-mm thickness")
-    for ordinal, (design, codes) in enumerate(sorted(designs.items())):
-        thickness, length, width, height = design
-        external = Dimensions(length, width, height)
-        internal = Dimensions(
-            round(length - 2 * thickness, 6),
-            round(width - 2 * thickness, 6),
-            round(height - 2 * thickness, 6),
-        )
-        if decimal_external_from_internal(internal, thickness) != external:
-            raise ValueError(f"decimal round trip failed for {design}")
-        candidate = CandidateBox(
-            f"decimal_output_{ordinal}",
-            thickness,
-            internal,
-            external,
-            boxes_per_pallet(external),
-            frozenset(codes),
-        )
-        for code in codes:
-            if not decimal_product_fits_candidate(products[code], internal, thickness):
-                raise ValueError(f"decimal design {design} is infeasible for {code}")
-            assignment[code] = candidate
-    return assignment, evaluate_assignments(data.products, assignment, policy)
-
-
 def run(args: argparse.Namespace) -> dict[str, object]:
     data = load_prepared_data(args.data_dir)
     policy = FreightPolicy()
@@ -141,10 +64,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         warm = validate_solution_csv(args.warm_start, data, policy)
         warm_start_kind = "official_integer"
     except ValueError:
-        warm_assignment, warm_costs = _validate_decimal_csv(
-            args.warm_start, data, policy
+        warm = validate_decimal_solution_csv(
+            args.warm_start, data, policy, required_thickness_mm=3.0
         )
-        warm = ValidationResult(warm_assignment, warm_costs)
         warm_start_kind = "decimal"
     retained = tuple(
         sorted({box.internal for box in warm.assignment.values()}, key=Dimensions.as_tuple)
@@ -248,8 +170,13 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             f"Gurobi objective {expected_mills} differs from independent cost {costs.total_mills}"
         )
     output_path = args.output_dir / "asignacion_decimal.csv"
-    _write_decimal_csv(output_path, data, assignment, args.decimal_places)
-    checked_assignment, checked_costs = _validate_decimal_csv(output_path, data, policy)
+    write_decimal_assignment_csv(
+        output_path, data, assignment, decimal_places=args.decimal_places
+    )
+    checked = validate_decimal_solution_csv(
+        output_path, data, policy, required_thickness_mm=3.0
+    )
+    checked_assignment, checked_costs = checked.assignment, checked.costs
     if checked_costs.total_mills != costs.total_mills:
         raise AssertionError("decimal CSV round-trip changed total cost")
     if set(checked_assignment) != set(assignment):

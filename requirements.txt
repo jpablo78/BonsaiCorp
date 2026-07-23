@@ -1,4 +1,3 @@
-cplex>=22.2,<23
-docplex>=2.32,<3
-highspy>=1.15,<2
+# Open-source runtime used by the supported core workflow.
+# Commercial and benchmark solvers are optional extras declared in pyproject.toml.
 ortools>=9.10,<10
