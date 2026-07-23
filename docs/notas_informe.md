@@ -1,5 +1,27 @@
 # Notas para el informe final
 
+## Evidencia A/B sobre headspace y reconfiguración del producto
+
+El FAQ permite modificar cada dimensión interna ±10% si el volumen total sigue
+alcanzando, pero también define el headspace por eje. Para resolver esa
+ambigüedad se preparó una prueba A/B controlada: se partió del CSV aceptado de
+precisión 0,1 mm y se modificó sólo BR0004. Se mantuvieron el esquema del CSV,
+los otros 426 SKU y el grosor global de 3 mm.
+
+La fila de prueba proponía dimensiones interiores 393 × 294 × 243 mm. Cumplía
+volumen, ±10%, ECT y palletización; además existía una reconfiguración del
+producto con igual volumen y headspace por eje dentro de los topes. Sin
+embargo, incumplía la regla más conservadora que mide el aumento frente a la
+dimensión interna histórica en cada eje. Kaggle asignó score 0 a esa submission
+controlada.
+
+Conclusión operativa: la formulación de producto libremente reconfigurable no
+es compatible con el validador. La solución usa la regla reconciliada: permite
+reducciones dentro de ±10% cuando el volumen interno alcanza, pero limita todo
+aumento positivo por eje contra la dimensión interna histórica. El experimento
+no prueba la intención semántica del enunciado; sí prueba qué subconjunto de
+geometrías acepta el evaluador oficial.
+
 ## Valor económico de la restricción de grosor uniforme
 
 La consigna exige utilizar un único grosor de cartón en todo el catálogo. Para
