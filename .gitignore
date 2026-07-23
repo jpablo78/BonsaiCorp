@@ -1,0 +1,32 @@
+# Local runtimes, caches and solver installations
+.venv/
+CPLEX/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Agent and editor-local state
+.agents/
+.codex/
+.vscode/
+
+# Solver logs and exported transient models
+*.log
+*.pb
+*.mps
+*.lp
+
+# Competition source material and raw data are deliberately not published
+/catalogo_productos.csv
+/especificaciones_cajas.csv
+/operaciones_planta.csv
+/procurement_cajas.csv
+/consigna_DataChallenge_AlixPartners.pdf
+/FAQ Bonsai Corp Corregido.docx
+/dataset description.txt
+
+# Experimental runs and temporary work. The selected frozen artifacts live in
+# /baseline and the report material in /docs instead.
+/output*/
+/tmp/

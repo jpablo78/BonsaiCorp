@@ -1,0 +1,39 @@
+{
+  "diagnostic_only": true,
+  "whole_millimetre_rule_relaxed": true,
+  "precision_mm": 0.1,
+  "status_name": "TIME_LIMIT",
+  "optimal": false,
+  "runtime_seconds": 300.06,
+  "relative_gap": 0.000008449153459384948,
+  "best_bound_usd": 188077795.12842,
+  "candidate_count": 1364,
+  "candidate_stats": {
+    "raw_grid_points": 3301765920,
+    "compressed_length_values": 28,
+    "compressed_width_values": 43,
+    "compressed_height_values": 205,
+    "compressed_grid_points": 246820,
+    "feasible_signatures": 12376,
+    "nondominated_signatures": 1318,
+    "retained_designs_added": 46,
+    "compatibility_links": 48609
+  },
+  "costs": {
+    "packaging_usd": 26921184.24,
+    "freight_usd": 161158200.0,
+    "total_usd": 188079384.24,
+    "pallets": 1074388,
+    "types": 59
+  },
+  "official_integer_total_usd": 188092808.1,
+  "savings_vs_integer_usd": 13423.86,
+  "estimated_score": 10.110975682839696,
+  "changed_products": 255,
+  "fractional_dimension_rows": 236,
+  "rows": 427,
+  "unique_products": 427,
+  "global_thickness_mm": 3.0,
+  "sha256": "a79aff251e1867a95efedd2548af5014df985f47cabfcd3161c7482a410b0d29",
+  "output_csv": "output_gurobi_tenth_mm_diagnostic_5m/asignacion_tenth_mm_DIAGNOSTIC.csv"
+}

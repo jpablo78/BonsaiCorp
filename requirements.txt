@@ -1,0 +1,4 @@
+cplex>=22.2,<23
+docplex>=2.32,<3
+highspy>=1.15,<2
+ortools>=9.10,<10
