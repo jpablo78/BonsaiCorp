@@ -1,4 +1,4 @@
-"""CSV ingestion, normalization and auditable preparation of challenge inputs."""
+"""Carga, normalización y preparación auditable de los CSV de la competencia."""
 
 from __future__ import annotations
 
@@ -20,11 +20,11 @@ REQUIRED_FILES = (
 
 
 class DataValidationError(ValueError):
-    """Raised when a required input relation cannot be safely interpreted."""
+    """Se lanza cuando una relación de entrada no puede interpretarse con seguridad."""
 
 
 def parse_number(value: str | int | float) -> float:
-    """Parse the inconsistent decimal formats present in the supplied CSVs."""
+    """Interpreta los formatos decimales inconsistentes de los CSV entregados."""
 
     text = str(value).strip().lower().replace("mm", "").replace(" ", "")
     if not text or text == "error":
@@ -49,18 +49,18 @@ def read_csv(data_dir: Path, filename: str) -> list[dict[str, str]]:
 
 
 def canonical_decimal(value: str | int | float) -> str:
-    """Format a normalized numeric value without an unnecessary trailing zero."""
+    """Formatea un número normalizado sin ceros finales innecesarios."""
 
     return f"{parse_number(value):g}"
 
 
 def export_cleaned_sources(data_dir: str | Path, output_dir: str | Path) -> dict[str, object]:
-    """Write a non-destructive, normalized copy of the four source CSVs.
+    """Escribe una copia normalizada y no destructiva de los cuatro CSV fuente.
 
-    The raw inputs remain untouched.  The explicit artifact makes the critical
-    thickness cleanup reviewable: comma/point decimal variants and optional
-    `mm` suffixes are converted to canonical numeric strings.  Deliberate
-    Procurement inconsistencies are preserved rather than silently imputed.
+    Los insumos originales no se modifican. El artefacto explícito permite
+    revisar la limpieza crítica de grosor: variantes de coma/punto decimal y
+    sufijos opcionales `mm` se convierten a cadenas numéricas canónicas. Las
+    inconsistencias deliberadas de Procurement se preservan, no se imputan.
     """
 
     source_root, clean_root = Path(data_dir), Path(output_dir)
@@ -118,14 +118,14 @@ def _dimensions(row: dict[str, str], prefix: str) -> Dimensions:
 def load_prepared_data(
     data_dir: str | Path, *, infer_internal_from_external: bool = False
 ) -> PreparedData:
-    """Create optimization-ready records, using Operations as the demand source.
+    """Crea registros listos para optimizar, usando Operaciones como demanda.
 
-    ``infer_internal_from_external`` is a diagnostic-only alternate source
-    convention.  It derives each historical internal dimension as external
-    minus twice the historical thickness.  These source/reference dimensions
-    may be fractional; proposed output dimensions remain whole millimetres.
-    The documented/default convention remains the explicit
-    ``caja_interior_*`` columns.
+    ``infer_internal_from_external`` es una convención alternativa sólo para
+    diagnóstico. Deriva cada dimensión interna histórica como la exterior
+    menos dos veces el grosor histórico. Estas dimensiones de referencia
+    pueden ser fraccionarias; las dimensiones propuestas de salida permanecen
+    en milímetros enteros. La convención documentada/predeterminada sigue
+    siendo las columnas explícitas ``caja_interior_*``.
     """
 
     root = Path(data_dir)
@@ -160,8 +160,8 @@ def load_prepared_data(
         external = _dimensions(row, "caja_exterior")
         internal = (
             Dimensions(
-                # Preserve genuine source decimals (for example 394.6 mm),
-                # while removing binary-float artefacts such as
+                # Conserva decimales genuinos de origen (por ejemplo 394.6 mm),
+                # eliminando a la vez artefactos de punto flotante binario como
                 # 254.99999999999997.
                 round(external.length - 2 * thickness, 6),
                 round(external.width - 2 * thickness, 6),
@@ -214,7 +214,7 @@ def _tier_factor(volume: int) -> float:
 
 
 def audit_dataset(data_dir: str | Path) -> dict[str, object]:
-    """Return a machine-readable audit without making any cleaning decision."""
+    """Devuelve una auditoría legible por máquina, sin decidir ninguna limpieza."""
 
     root = Path(data_dir)
     catalog_rows = read_csv(root, "catalogo_productos.csv")

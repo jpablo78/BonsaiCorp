@@ -10,7 +10,7 @@ PLANTS = ("buenos_aires", "curitiba", "santiago", "monterrey", "bakersfield")
 
 @dataclass(frozen=True)
 class Dimensions:
-    """Largo, ancho, alto in millimetres."""
+    """Largo, ancho y alto en milímetros."""
 
     length: float
     width: float
@@ -51,7 +51,7 @@ class CurrentBoxSpec:
 
 @dataclass(frozen=True)
 class CandidateBox:
-    """A discrete integer-mm design considered by the optimizer."""
+    """Un diseño discreto de milímetros enteros considerado por el optimizador."""
 
     candidate_id: str
     thickness_mm: float

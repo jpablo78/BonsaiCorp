@@ -9,6 +9,8 @@ utilizaron durante la competencia.
   construida sobre el núcleo.
 - `run_highs_benchmark.py`: benchmark open source opcional.
 - `run_decimal_scip.py`: ruta decimal open source con OR-Tools/SCIP.
+- `build_headspace_ab_probe.py`: genera una submission controlada que cambia
+  sólo BR0004 para contrastar la interpretación de headspace en Kaggle.
 - `run_gurobi_*` y `run_cplex_*`: benchmarks o diagnósticos comerciales;
   requieren instalación y licencia local, y no son dependencias del proyecto.
 

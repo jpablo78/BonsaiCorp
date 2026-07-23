@@ -1,4 +1,4 @@
-"""Centralized assumptions and commercial constants."""
+"""Supuestos y constantes comerciales centralizados."""
 
 from __future__ import annotations
 
@@ -44,12 +44,12 @@ DISCOUNT_TIERS: Final[tuple[DiscountTier, ...]] = (
 
 @dataclass(frozen=True)
 class FreightPolicy:
-    """Freight policy extensible to an extra-region shipment share.
+    """Política de flete extensible a una proporción de envíos extra-región.
 
-    The base challenge data has no destination matrix, so the approved scenario
-    uses an extra-region share of zero.  When a defensible share becomes
-    available, set it between zero and one; the expected pallet rate becomes
-    the weighted average of intra- and extra-region rates.
+    Los datos base de la competencia no tienen una matriz de destinos; por eso
+    el escenario aprobado usa proporción extra-región igual a cero. Cuando
+    exista una proporción defendible, se carga entre cero y uno: la tarifa
+    esperada por pallet pasa a ser el promedio ponderado entre ambas tarifas.
     """
 
     intra_region_usd_per_pallet: float = 150.0

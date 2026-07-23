@@ -1,4 +1,4 @@
-"""Cost evaluation independent from the optimization model."""
+"""Evaluación de costos independiente del modelo de optimización."""
 
 from __future__ import annotations
 
@@ -14,12 +14,12 @@ BoxTypeKey = tuple[float, float, float, float]
 
 
 def box_type_key(candidate: CandidateBox) -> BoxTypeKey:
-    """Return the commercial identity of one physical box design.
+    """Devuelve la identidad comercial de un diseño físico de caja.
 
-    Candidate IDs are solver-local labels.  Procurement discounts and the
-    reported number of types are determined by the physical box itself, so
-    equal designs must be consolidated even when they came from different
-    candidate universes or solution files.
+    Los ID de candidatos son etiquetas locales al solver. Los descuentos de
+    Procurement y la cantidad informada de tipos se determinan por la caja
+    física; por eso, diseños iguales deben consolidarse aunque provengan de
+    universos de candidatos o archivos de solución distintos.
     """
 
     return (candidate.thickness_mm, *candidate.external.as_tuple())
@@ -50,7 +50,7 @@ def evaluate_assignments(
     assignment_by_code: dict[str, CandidateBox],
     freight_policy: FreightPolicy,
 ) -> CostBreakdown:
-    """Recompute all costs from assignments; never trusts solver objective values."""
+    """Recalcula todos los costos; no confía en el objetivo del solver."""
 
     if set(assignment_by_code) != {product.code for product in products}:
         raise ValueError("assignment must contain exactly one row for every product")
