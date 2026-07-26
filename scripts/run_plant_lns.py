@@ -1,4 +1,4 @@
-"""Command-line wrapper for :mod:`bonsai.plant_lns`."""
+"""Adaptador de línea de comandos para :mod:`bonsai.plant_lns`."""
 
 from bonsai.plant_lns import main
 

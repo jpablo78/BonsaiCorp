@@ -1,4 +1,4 @@
-"""Solve an exact Bonsai neighbourhood with CPLEX through a lossless proto bridge.
+"""Resuelve un vecindario exacto de Bonsai con CPLEX mediante un puente proto sin pérdidas.
 
 OR-Tools' MPS/LP writers round some large integer bounds.  This runner instead
 exports the already-audited MPModelProto and recreates every variable, row,

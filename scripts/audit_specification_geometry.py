@@ -1,8 +1,8 @@
-"""Audit raw carton-thickness formatting and historical box geometry coherence.
+"""Audita el formato crudo de grosor de cartón y la coherencia geométrica histórica de cajas.
 
-This is intentionally read-only.  Historical external dimensions are not used to
-construct proposed boxes, but discrepancies are useful data-quality evidence and
-must not be silently reinterpreted as product dimensions.
+Es deliberadamente de sólo lectura. Las dimensiones exteriores históricas no se
+usan para construir cajas propuestas, pero sus discrepancias son evidencia útil
+de calidad de datos y no deben reinterpretarse silenciosamente como dimensiones de producto.
 """
 
 from __future__ import annotations
@@ -47,8 +47,8 @@ def main() -> None:
         product_id = row.get("codigo_producto")
         if not product_id:
             continue
-        # This reflects the authorized demand source.  Other numeric columns are
-        # irrelevant to the geometry audit.
+# Esto refleja la fuente de demanda autorizada. Las demás columnas numéricas
+# no son relevantes para la auditoría geométrica.
         for candidate in ("volumen_producto_total", "cantidad_cajas", "cantidad", "demanda"):
             if row.get(candidate, "").strip():
                 try:

@@ -1,4 +1,4 @@
-"""Command-line runner for the alternative SCIP exact master model."""
+"""Ejecutor de línea de comandos para el modelo maestro exacto alternativo con SCIP."""
 
 from __future__ import annotations
 

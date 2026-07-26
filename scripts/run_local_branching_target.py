@@ -1,4 +1,4 @@
-"""Search an exact Hamming-distance neighbourhood below a cost target.
+"""Busca un vecindario exacto por distancia de Hamming bajo un costo objetivo.
 
 This is a solver-search driver, not a different contest formulation.  It
 keeps the documented candidate universe and cost evaluator unchanged, fixes a

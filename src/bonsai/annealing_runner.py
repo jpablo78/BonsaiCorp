@@ -1,4 +1,4 @@
-"""Auditable command-line runner for guided incremental annealing."""
+"""Ejecutor auditable de línea de comandos para annealing incremental guiado."""
 
 from __future__ import annotations
 

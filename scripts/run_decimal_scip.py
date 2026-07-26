@@ -1,8 +1,8 @@
-"""Optimize the decimal-mm candidate universe with OR-Tools MPSolver/SCIP.
+"""Optimiza el universo de candidatos en milímetros decimales con OR-Tools MPSolver/SCIP.
 
-This is the open-source counterpart of the historical Gurobi decimal runner.
-It preserves the same candidate generator, strict decimal validator and
-independent cost evaluator; only the MIP backend changes.
+Es la contraparte de código abierto del ejecutor decimal histórico de Gurobi.
+Conserva el mismo generador de candidatos, validador decimal estricto y
+evaluador independiente de costos; sólo cambia el backend MIP.
 """
 
 from __future__ import annotations

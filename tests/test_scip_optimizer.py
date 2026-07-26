@@ -288,7 +288,7 @@ class ScipOptimizerTests(unittest.TestCase):
         self.assertTrue(result.improved_incumbent)
         self.assertEqual(result.assignment["P1"].internal, fixed.internal)
         self.assertEqual(result.assignment["P2"].internal, fixed.internal)
-        # P2 is a true fixed constant: no assignment variable is created for it.
+    # P2 es una constante realmente fija: no se crea variable de asignación.
         self.assertEqual(result.assignment_variable_count, 2)
         self.assertEqual(result.fixed_product_count, 1)
         self.assertEqual(
@@ -313,7 +313,7 @@ class ScipOptimizerTests(unittest.TestCase):
             num_threads=1,
             initial_assignment={"P1": incumbent_box},
             free_product_codes={"P1"},
-            # The incumbent is deliberately omitted and must be added safely.
+    # La incumbente se omite deliberadamente y debe agregarse de forma segura.
             allowed_internals_by_product={"P1": {target.internal}},
             precomputed_exact_candidates=(incumbent_box, target, forbidden),
         )

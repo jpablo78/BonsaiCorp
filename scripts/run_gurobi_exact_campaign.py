@@ -1,8 +1,8 @@
-"""Run the bounded 12-hour Gurobi campaign for the strict 3-mm Bonsai model.
+"""Ejecuta la campaña Gurobi acotada a 12 horas para el modelo estricto de Bonsai de 3 mm.
 
-The campaign never extends itself beyond its configured duration.  It writes a
-durable status JSON after every phase so it remains auditable and can be
-resumed manually after an interruption.
+La campaña nunca supera su duración configurada. Escribe un JSON de estado
+persistente después de cada fase, por lo que sigue siendo auditable y puede
+reanudarla manualmente tras una interrupción.
 """
 
 from __future__ import annotations
@@ -53,8 +53,8 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _phase_plan(hours: float) -> tuple[Phase, ...]:
-    # The standard campaign totals 12 h.  When a shorter duration is requested,
-    # preserve phase order and truncate the final phase rather than extending.
+# La campaña estándar suma 12 h. Cuando se pide menos duración, se preserva el
+# orden de fases y se trunca la última en vez de extenderla.
     standard = (
         Phase(
             "01_incumbent_hunt",
@@ -133,9 +133,9 @@ def _target_reached(summary: dict[str, object], target_usd: float) -> bool:
 
 
 def _target_ruled_out(summary: dict[str, object], target_usd: float) -> bool:
-    # A valid MIP lower bound above the target proves no unseen solution can
-    # reach it within the exact strict model.  Keep a one-dollar margin for
-    # floating-point reporting of the transformed objective.
+# Una cota inferior MIP válida sobre el objetivo prueba que ninguna solución no
+# vista puede alcanzarlo dentro del modelo estricto exacto. Se conserva un margen
+# de un dólar para el reporte en punto flotante del objetivo transformado.
     bound = summary.get("best_bound_usd")
     return bound is not None and float(bound) > target_usd + 1.0
 

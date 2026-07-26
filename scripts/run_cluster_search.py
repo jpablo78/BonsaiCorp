@@ -1,4 +1,4 @@
-"""Command-line wrapper for :mod:`bonsai.cluster_search`."""
+"""Adaptador de línea de comandos para :mod:`bonsai.cluster_search`."""
 
 from bonsai.cluster_search import main
 

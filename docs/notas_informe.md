@@ -12,7 +12,7 @@ La fila de prueba proponía dimensiones interiores 393 × 294 × 243 mm. Cumplí
 volumen, ±10%, ECT y palletización; además existía una reconfiguración del
 producto con igual volumen y headspace por eje dentro de los topes. Sin
 embargo, incumplía la regla más conservadora que mide el aumento frente a la
-dimensión interna histórica en cada eje. Kaggle asignó score 0 a esa submission
+dimensión interna histórica en cada eje. Kaggle asignó resultado 0 a esa entrega
 controlada.
 
 Conclusión operativa: la formulación de producto libremente reconfigurable no
@@ -44,7 +44,7 @@ resultado fue:
 - grosor de 4,5 mm: no utilizado;
 - tipos de caja: 51 en el escenario oficial y 57 en el diagnóstico.
 
-El CSV diagnóstico fue enviado a Kaggle y recibió score 0. Esto confirma
+El CSV diagnóstico fue enviado a Kaggle y recibió resultado 0. Esto confirma
 empíricamente que la uniformidad del grosor es una restricción dura de
 factibilidad. Por lo tanto, el escenario mixto no debe presentarse como solución
 admisible ni como alternativa de submit. Su utilidad es exclusivamente
@@ -59,7 +59,7 @@ una precisión de 0,1 mm, alcanza un costo total de USD 188.079.384,24 y emplea
 precisión de seis decimales de milímetro. Se encontró una solución con el mismo
 costo total y la misma cantidad de pallets, pero con 58 tipos de caja.
 
-La reducción no mejora el score de Kaggle, porque `N_tipos` es una métrica de
+La reducción no mejora el resultado de Kaggle, porque `N_tipos` es una métrica de
 seguimiento y no forma parte de la función objetivo. Sin embargo, sí avanza en
 una dirección comercial relevante para Bonsai Corp: reducir la dispersión del
 portafolio de cajas y simplificar compras, inventario, homologación y operación.

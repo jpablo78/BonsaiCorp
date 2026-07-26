@@ -1,4 +1,4 @@
-"""Run an auditable, hard-capped overnight decimal-precision campaign."""
+"""Ejecuta una campaña nocturna auditable de precisión decimal con límite estricto."""
 
 from __future__ import annotations
 
@@ -114,7 +114,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 1 if diversification_index % 2 else 2,
                 2026072500 + diversification_index,
             )
-        # Reserve three minutes for CSV validation, JSON writes and clean exit.
+# Reserva tres minutos para validar CSV, escribir JSON y finalizar ordenadamente.
         solve_seconds = max(1, min(phase.seconds, int(remaining - 180)))
         phase_dir = args.output_dir / phase.name
         phase_dir.mkdir(parents=True, exist_ok=True)

@@ -1,9 +1,10 @@
-"""Economic large neighbourhoods centred on Procurement discount tiers.
+"""Grandes vecindarios económicos centrados en tiers de descuento de Procurement.
 
-The useful couplings in this problem are not necessarily geographic.  A box
-design is procured separately per plant, and moving a set of SKUs onto or off
-one design can cross an all-units discount threshold.  These helpers expose
-those couplings for exact restricted SCIP repairs.
+Los acoplamientos útiles de este problema no son necesariamente geográficos.
+Un diseño de caja se compra por separado en cada planta y mover un conjunto de
+SKU hacia o desde un diseño puede cruzar un umbral de descuento sobre todas las
+unidades. Estas utilidades exponen esos acoplamientos para reparaciones SCIP
+exactas y restringidas.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from .models import CandidateBox, Dimensions, PLANTS, Product
 
 @dataclass(frozen=True)
 class ProcurementExposure:
-    """A current design/plant volume with an attainable next discount tier."""
+    """Un volumen actual de diseño/planta con un próximo tier de descuento alcanzable."""
 
     internal: Dimensions
     plant: str
@@ -33,7 +34,7 @@ class ProcurementExposure:
 
     @property
     def priority(self) -> float:
-        """Potential saving weighted toward thresholds that are easier to reach."""
+        """Ahorro potencial ponderado hacia umbrales más fáciles de alcanzar."""
 
         return self.potential_saving_mills / max(1, self.gap_to_next)
 
@@ -43,11 +44,11 @@ def rank_procurement_exposures(
     incumbent: Mapping[str, CandidateBox],
     candidates: Sequence[CandidateBox],
 ) -> tuple[ProcurementExposure, ...]:
-    """Rank current type/plant volumes that could reach their next price tier.
+    """Ordena volúmenes actuales tipo/planta que podrían alcanzar su próximo tier de precio.
 
-    The potential saving is exact *conditional on reaching the threshold*: the
-    lower price then applies to every unit of that physical type at that plant.
-    It is only a priority signal, never an objective approximation.
+    El ahorro potencial es exacto *condicionado a alcanzar el umbral*: el
+    menor precio se aplica entonces a cada unidad de ese tipo físico en la planta.
+    Es sólo una señal de prioridad, nunca una aproximación del objetivo.
     """
 
     product_by_code = {product.code: product for product in products}
@@ -67,7 +68,7 @@ def rank_procurement_exposures(
     for internal, current_users in users_by_internal.items():
         candidate = candidate_by_internal.get(internal)
         if candidate is None:
-            # Retained incumbent designs are always part of the exact universe.
+    # Los diseños retenidos de la incumbente siempre pertenecen al universo exacto.
             raise ValueError(f"incumbent internal design missing from candidates: {internal}")
         for plant in PLANTS:
             volume = volume_by_internal_plant[(internal, plant)]
@@ -131,7 +132,7 @@ def threshold_free_codes(
     *,
     max_codes: int,
 ) -> frozenset[str]:
-    """Select a compact cross-plant repair set for one threshold exposure."""
+    """Selecciona un conjunto compacto de reparación multiplanta para una exposición a umbral."""
 
     if max_codes < 1:
         raise ValueError("max codes must be positive")
@@ -139,7 +140,7 @@ def threshold_free_codes(
     chosen: list[str] = list(exposure.current_user_codes)
     seen = set(chosen)
 
-    # Prefer incoming SKUs whose plant demand most efficiently closes the gap.
+    # Se prefieren SKU entrantes cuya demanda en planta cierra la brecha con mayor eficiencia.
     incoming = sorted(
         (code for code in exposure.eligible_incoming_codes if code not in seen),
         key=lambda code: (
@@ -162,11 +163,11 @@ def rins_disagreement_order(
     arc_values: Mapping[tuple[str, Dimensions], float],
     reduced_costs_mills: Mapping[tuple[str, Dimensions], float],
 ) -> tuple[str, ...]:
-    """Rank SKU whose LP row most strongly disagrees with the incumbent.
+    """Ordena SKU cuya fila LP discrepa con mayor fuerza de la incumbente.
 
-    A zero LP value on the incumbent arc is a standard RINS signal.  Reduced
-    costs break ties so rows with promising alternative designs are considered
-    before merely fractional but economically inactive rows.
+    Un valor LP nulo en el arco incumbente es una señal estándar de RINS. Los
+    costos reducidos desempatan para considerar antes filas con diseños
+    alternativos prometedores que filas sólo fraccionarias e inactivas económicamente.
     """
 
     ranked: list[tuple[float, float, str]] = []

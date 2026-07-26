@@ -1,4 +1,4 @@
-"""Command-line wrapper for :mod:`bonsai.annealing_runner`."""
+"""Adaptador de línea de comandos para :mod:`bonsai.annealing_runner`."""
 
 from bonsai.annealing_runner import main
 

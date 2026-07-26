@@ -1,14 +1,14 @@
-"""Deterministic tier-focused SKU neighborhoods for large-neighborhood search.
+"""Vecindarios deterministas de SKU centrados en tiers para búsqueda de gran vecindario.
 
-The procurement schedule is applied to a physical box type independently at
-each plant, while the assignment decision for a SKU is global.  A useful LNS
-neighborhood therefore cannot contain only the SKU that may complete a target
-tier: it must also contain every SKU currently assigned to that SKU's source
-box type.  Otherwise the local model freezes most of the source tier and can
-miss (or misprice) the coordinated move.
+La tabla de Procurement se aplica a un tipo físico de caja en cada planta,
+mientras que asignar un SKU es una decisión global. Por eso, un vecindario LNS
+útil no puede contener sólo el SKU que completa un tier objetivo: debe incluir
+todos los SKU hoy asignados al tipo origen de ese SKU. De otro modo el modelo
+local congela la mayor parte del tier origen y puede omitir o valorar mal el
+movimiento coordinado.
 
-This module only identifies promising neighborhoods.  It deliberately does
-not depend on OR-Tools or mutate the incumbent assignment.
+Este módulo sólo identifica vecindarios prometedores. No depende
+deliberadamente de OR-Tools ni modifica la asignación incumbente.
 """
 
 from __future__ import annotations
@@ -24,11 +24,12 @@ from .models import CandidateBox, PLANTS, PreparedData, Product
 
 @dataclass(frozen=True)
 class DonorGroup:
-    """One complete incumbent source type that can feed a tier target.
+    """Un tipo origen completo de la incumbente que puede alimentar un objetivo de tier.
 
-    ``source_codes`` always contains *all* SKUs assigned to ``source_type``.
-    Only ``eligible_codes`` can move directly to the receiving design and only
-    their demand is counted in ``eligible_volume_at_target_plant``.
+    ``source_codes`` siempre contiene *todos* los SKU asignados a
+    ``source_type``. Sólo ``eligible_codes`` puede moverse directamente al
+    diseño receptor y sólo su demanda se cuenta en
+    ``eligible_volume_at_target_plant``.
     """
 
     source_type: BoxTypeKey
@@ -40,7 +41,7 @@ class DonorGroup:
 
 @dataclass(frozen=True)
 class TierTarget:
-    """An incumbent physical box type/plant below its next discount tier."""
+    """Un tipo físico de caja/planta de la incumbente bajo su próximo tier de descuento."""
 
     box_type: BoxTypeKey
     plant: str
@@ -74,7 +75,7 @@ class TierTarget:
 
 @dataclass(frozen=True)
 class Neighborhood:
-    """A set of whole incumbent source groups to release together in LNS."""
+    """Un conjunto de grupos origen completos de la incumbente para liberar juntos en LNS."""
 
     neighborhood_id: str
     kind: Literal["star", "component"]
@@ -98,14 +99,14 @@ class Neighborhood:
 
     @property
     def gross_incumbent_discount_value_mills(self) -> int:
-        """Gross tier value before freight and source-tier side effects."""
+        """Valor bruto de tier antes del flete y de efectos secundarios en los tiers origen."""
 
         return sum(target.incumbent_discount_value_mills for target in self.targets)
 
 
 @dataclass(frozen=True)
 class TierNeighborhoodPlan:
-    """Complete deterministic output used by a subsequent LNS driver."""
+    """Salida determinista completa usada por un ejecutor LNS posterior."""
 
     targets: tuple[TierTarget, ...]
     stars: tuple[Neighborhood, ...]
@@ -113,8 +114,8 @@ class TierNeighborhoodPlan:
 
 
 def _candidate_rank(candidate: CandidateBox) -> tuple[int, str, tuple[int, int, int]]:
-    # Prefer the exact representative with the broadest compatibility.  The
-    # remaining fields make selection independent from iterable order.
+    # Se prefiere el representante exacto de compatibilidad más amplia. Los
+    # campos restantes hacen que la elección no dependa del orden iterable.
     return (
         -len(candidate.compatible_product_codes),
         candidate.candidate_id,
@@ -172,7 +173,7 @@ def _exact_representatives(
 
 
 def _donor_rank(group: DonorGroup, gap_units: int) -> tuple[object, ...]:
-    """Prefer a small source group that can fill the gap on its own.
+    """Prefiere un grupo origen pequeño que pueda cubrir por sí solo la brecha.
 
     If no group is sufficient, larger contributions rank first.  This keeps a
     capped star useful without introducing randomness.
@@ -206,7 +207,7 @@ def identify_tier_targets(
     require_reachable: bool = False,
     max_targets: int | None = None,
 ) -> tuple[TierTarget, ...]:
-    """Return incumbent type/plant pairs ordered by proximity to the next tier.
+    """Devuelve pares tipo/planta de la incumbente por proximidad al próximo tier.
 
     Zero-volume type/plant pairs and pairs already in the last tier are not
     targets.  ``max_gap_*`` filters are optional and conjunctive.  Reachability
@@ -353,7 +354,7 @@ def build_star_neighborhoods(
     max_skus: int | None = None,
     require_selected_donor: bool = True,
 ) -> tuple[Neighborhood, ...]:
-    """Create one receiver-centred star for every target.
+    """Crea una estrella centrada en el receptor para cada objetivo.
 
     Limits never split an incumbent source group.  A target whose receiver
     group alone exceeds ``max_skus`` is omitted; donor groups that would exceed
@@ -420,7 +421,7 @@ def build_star_neighborhoods(
 def build_component_neighborhoods(
     stars: Iterable[Neighborhood],
 ) -> tuple[Neighborhood, ...]:
-    """Merge stars connected through at least one incumbent source group."""
+    """Une estrellas conectadas mediante al menos un grupo origen de la incumbente."""
 
     ordered_stars = tuple(
         sorted(
@@ -528,7 +529,7 @@ def build_tier_neighborhoods(
     max_source_groups: int | None = None,
     max_skus: int | None = None,
 ) -> TierNeighborhoodPlan:
-    """Identify targets and build both star and connected-component views."""
+    """Identifica objetivos y construye vistas de estrellas y componentes conexos."""
 
     targets = identify_tier_targets(
         data,

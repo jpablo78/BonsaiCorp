@@ -1,4 +1,4 @@
-"""Command-line wrapper for :mod:`bonsai.tier_lns`."""
+"""Adaptador de línea de comandos para :mod:`bonsai.tier_lns`."""
 
 from bonsai.tier_lns import main
 

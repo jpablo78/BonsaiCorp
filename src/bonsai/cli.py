@@ -1,4 +1,4 @@
-"""Command-line interface for the Bonsai optimization workflow."""
+"""Interfaz de línea de comandos para el flujo de optimización de Bonsai."""
 
 from __future__ import annotations
 
@@ -17,6 +17,14 @@ from .costs import evaluate_assignments, freight_pallets
 from .data import audit_dataset, export_cleaned_sources, load_prepared_data
 from .exact_candidates import generate_exact_candidates
 from .heuristics import greedy_cover_assignment
+from .lifecycle import (
+    candidate_payload,
+    evaluate_existing_type_assignment,
+    infer_decimal_places,
+    load_new_product,
+    recalculated_catalog,
+    write_incremental_assignment,
+)
 from .models import PLANTS
 from .optimizer import SolveResult, solve_for_thickness
 from .plateau import diversify_assignment
@@ -369,6 +377,108 @@ def command_validate_solution(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cost_delta_payload(before, after) -> dict[str, object]:
+    """Resume el efecto económico entre dos evaluaciones independientes."""
+
+    return {
+        "packaging_usd": (after.packaging_mills - before.packaging_mills) / 1000,
+        "freight_usd": (after.freight_mills - before.freight_mills) / 1000,
+        "total_usd": (after.total_mills - before.total_mills) / 1000,
+        "pallets": after.pallets - before.pallets,
+        "types": after.types - before.types,
+    }
+
+
+def command_recalculate_demand(args: argparse.Namespace) -> int:
+    """Reevalúa una asignación fija contra un pronóstico de demanda nuevo."""
+
+    policy = _freight_policy(args)
+    current_data = load_prepared_data(args.data_dir)
+    projected_data = load_prepared_data(
+        args.data_dir, operations_override=args.operaciones_override
+    )
+    current = recalculated_catalog(args.solution, current_data, policy)
+    projected = recalculated_catalog(args.solution, projected_data, policy)
+    payload = {
+        "mode": "recalcular_demanda_catalogo_fijo",
+        "solution_path": str(args.solution),
+        "operations_override": str(args.operaciones_override),
+        "current_costs": current.costs.as_dict(),
+        "projected_costs": projected.costs.as_dict(),
+        "delta_projected_minus_current": _cost_delta_payload(
+            current.costs, projected.costs
+        ),
+        "assignment_changes": 0,
+        "new_box_types": 0,
+    }
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    write_json(args.output_dir / "resultado_recalculo.json", payload)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def command_incremental_onboarding(args: argparse.Namespace) -> int:
+    """Asigna un SKU nuevo únicamente a tipos que ya están activos."""
+
+    policy = _freight_policy(args)
+    data = load_prepared_data(
+        args.data_dir, operations_override=args.operaciones_override
+    )
+    product = load_new_product(args.new_product, set(data.product_by_code))
+    decision = evaluate_existing_type_assignment(data, args.solution, product, policy)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    payload: dict[str, object] = {
+        "mode": "alta_incremental_solo_tipos_existentes",
+        "solution_path": str(args.solution),
+        "operations_override": (
+            str(args.operaciones_override)
+            if args.operaciones_override is not None
+            else None
+        ),
+        "new_product_path": str(args.new_product),
+        "sku": product.code,
+        "active_types_evaluated": decision.active_types_evaluated,
+        "feasible_active_types": decision.feasible_active_types,
+        "cost_before_usd": decision.baseline.costs.total_mills / 1000,
+    }
+    if decision.selected_candidate is None:
+        payload.update(
+            {
+                "decision": "requiere_nuevo_diseno",
+                "motivo": (
+                    "Ninguno de los tipos de caja vigentes cumple simultáneamente "
+                    "las restricciones de dimensiones, headspace, ECT y palletización."
+                ),
+                "tiers_afectados": [],
+            }
+        )
+    else:
+        output_path = args.output_dir / "asignacion_incremental.csv"
+        checked = write_incremental_assignment(
+            output_path,
+            decision,
+            decimal_places=infer_decimal_places(args.solution),
+            freight_policy=policy,
+        )
+        payload.update(
+            {
+                "decision": "usar_tipo_existente",
+                "tipo_elegido": candidate_payload(decision.selected_candidate),
+                "cost_after_usd": checked.costs.total_mills / 1000,
+                "costo_incremental_usd": (
+                    checked.costs.total_mills - decision.baseline.costs.total_mills
+                )
+                / 1000,
+                "tiers_afectados": list(decision.tier_changes),
+                "output_csv": str(output_path),
+            }
+        )
+    write_json(args.output_dir / "decision_alta_incremental.json", payload)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Bonsai Corp packaging optimization")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -529,6 +639,53 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common_arguments(validate_solution)
     validate_solution.add_argument("solution_path", type=Path)
     validate_solution.set_defaults(handler=command_validate_solution)
+
+    recalculate_demand = subparsers.add_parser(
+        "recalcular-demanda",
+        help="reevaluate a fixed validated catalog against projected demand",
+    )
+    _add_common_arguments(recalculate_demand)
+    recalculate_demand.add_argument(
+        "--solution", type=Path, required=True, help="validated catalog assignment CSV"
+    )
+    recalculate_demand.add_argument(
+        "--operaciones-override",
+        type=Path,
+        required=True,
+        help="projected operations CSV with the same schema as operaciones_planta.csv",
+    )
+    recalculate_demand.add_argument(
+        "--output-dir", type=Path, required=True, help="directory for resultado_recalculo.json"
+    )
+    recalculate_demand.set_defaults(handler=command_recalculate_demand)
+
+    onboarding = subparsers.add_parser(
+        "alta-incremental",
+        help="assign one new SKU exclusively to active existing box types",
+    )
+    _add_common_arguments(onboarding)
+    onboarding.add_argument(
+        "--solution", type=Path, required=True, help="validated catalog assignment CSV"
+    )
+    onboarding.add_argument(
+        "--nuevo-producto",
+        dest="new_product",
+        type=Path,
+        required=True,
+        help="single-row CSV following the documented new-product contract",
+    )
+    onboarding.add_argument(
+        "--operaciones-override",
+        type=Path,
+        help="optional projected demand for existing SKUs; defaults to operaciones_planta.csv",
+    )
+    onboarding.add_argument(
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="directory for the incremental decision and, if feasible, assignment CSV",
+    )
+    onboarding.set_defaults(handler=command_incremental_onboarding)
     return parser
 
 

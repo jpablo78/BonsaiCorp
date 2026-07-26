@@ -224,8 +224,8 @@ class IncrementalAnnealingTests(unittest.TestCase):
             free_product_codes={"P1"},
             max_extra_pallets=100,
         )
-        # Both SKUs have a 100-pallet global minimum.  P2 is fixed during the
-        # walk, but its incumbent does not loosen the optimizer-style budget.
+    # Ambos SKU tienen un mínimo global de 100 pallets. P2 queda fijo durante
+    # el recorrido, pero su incumbente no relaja el presupuesto del optimizador.
         self.assertEqual(result.minimum_pallets, 200)
         self.assertEqual(result.max_pallets, 300)
 

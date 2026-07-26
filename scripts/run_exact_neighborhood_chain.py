@@ -1,4 +1,4 @@
-"""Run a reproducible chain of exact SCIP neighbourhoods.
+"""Ejecuta una cadena reproducible de vecindarios SCIP exactos.
 
 Each step frees the SKU with demand in a specified set of plants while every
 other SKU remains fixed to the current incumbent.  A single global candidate
@@ -32,7 +32,7 @@ def _slug(plants: tuple[str, ...]) -> str:
 
 
 def _default_schedule() -> list[tuple[tuple[str, ...], float]]:
-    """Use about 7h45m if every limit is consumed.
+    """Usa aproximadamente 7 h 45 min si se consume cada límite.
 
     We put smaller exact neighbourhoods first so that any improvement becomes
     a warm start for the more difficult pairs, triples and full master.
@@ -48,7 +48,7 @@ def _default_schedule() -> list[tuple[tuple[str, ...], float]]:
         ("santiago", "monterrey"),
         ("santiago", "bakersfield"),
         ("monterrey", "bakersfield"),
-        # These were explored with an older incumbent, so revisit them last.
+# Estos se exploraron con una incumbente anterior, por lo que se revisitan al final.
         ("buenos_aires", "curitiba"),
         ("curitiba", "santiago"),
     ]
@@ -64,7 +64,7 @@ def _default_schedule() -> list[tuple[tuple[str, ...], float]]:
         ("santiago", "monterrey", "bakersfield"),
         ("buenos_aires", "curitiba", "santiago"),
     ]
-    # 15 min singles + 150 min pairs + 200 min triples + 100 min global.
+# 15 min individuales + 150 min pares + 200 min triples + 100 min global.
     return (
         [(group, 180.0) for group in singles]
         + [(group, 900.0) for group in pairs]
@@ -119,7 +119,7 @@ def _parse_arguments() -> argparse.Namespace:
 
 
 def _configuration_payload(args: argparse.Namespace) -> dict[str, object]:
-    """Make argparse values JSON-safe without losing their exact spelling."""
+    """Vuelve seguros para JSON los valores de argparse sin perder su forma exacta."""
 
     return {
         key: str(value) if isinstance(value, Path) else value
@@ -171,9 +171,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             precomputed_exact_candidates=candidates,
             precomputed_exact_candidate_stats=candidate_stats,
             max_extra_pallets=args.max_extra_pallets,
-            # ``target_total_mills`` is a hard MIP constraint.  The target is
-            # only a chain-stopping condition: otherwise a valid partial
-            # improvement would be falsely rejected as infeasible.
+# ``target_total_mills`` es una restricción MIP dura. El objetivo sólo detiene
+# la cadena: de otro modo una mejora parcial válida se rechazaría erróneamente
+# como infactible.
             target_total_mills=None,
             memory_limit_mb=args.memory_limit_mb,
             progress_callback=lambda message, step=label: print(f"[{step}] {message}", flush=True),
@@ -231,7 +231,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         if args.stop_at_target and current.costs.total_mills <= TARGET_TOTAL_MILLS:
             break
 
-    # Re-read the final CSV rather than relying on in-memory solver state.
+# Vuelve a leer el CSV final en vez de depender del estado en memoria del solucionador.
     final = validate_solution_csv(best_path, data, policy)
     return {
         "best": final.costs.as_dict(),

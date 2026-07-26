@@ -1,9 +1,9 @@
-"""Parallel, exact SCIP neighbourhood batches for the Bonsai incumbent.
+"""Lotes paralelos de vecindarios SCIP exactos para la incumbente de Bonsai.
 
-One SCIP neighbourhood often cannot keep every CPU core busy because its tree
-is small.  This runner solves independent plant combinations concurrently,
-each from the same validated incumbent, then promotes only the independently
-validated best result before starting the next batch.
+Un vecindario SCIP suele no ocupar todos los núcleos porque su árbol es pequeño.
+Este ejecutor resuelve en paralelo combinaciones independientes de plantas,
+todas desde la misma incumbente validada, y promueve sólo el mejor resultado
+validado independientemente antes de iniciar el lote siguiente.
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ def _worker(
     random_seed: int,
     scip_parameters: str | None,
 ):
-    """Worker payload intentionally contains no output path or file writes."""
+    """La carga del trabajador no contiene deliberadamente rutas ni escrituras de salida."""
 
     data = load_prepared_data(Path(data_dir))
     candidates, stats = generate_exact_candidates(
@@ -171,7 +171,7 @@ def _configuration(args: argparse.Namespace) -> dict[str, object]:
 
 
 def _stages() -> tuple[tuple[str, tuple[tuple[str, ...], ...], float], ...]:
-    """Ordered batches; theoretical duration exceeds 8h, then total limit stops."""
+    """Lotes ordenados; la duración teórica supera 8 h y el límite total detiene la corrida."""
 
     return (
         ("pairs_a", PAIRS, 900.0),

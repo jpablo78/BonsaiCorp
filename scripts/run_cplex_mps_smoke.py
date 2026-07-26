@@ -1,4 +1,4 @@
-"""First CPLEX smoke test on a real restricted Bonsai MIP.
+"""Primera prueba rápida de CPLEX sobre un MIP restringido real de Bonsai.
 
 This deliberately uses an MPS interchange file only to validate that CPLEX
 can consume a real neighbourhood of the current formulation.  It is not the
@@ -55,8 +55,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     model_path = args.output_dir / "neighborhood.mps"
 
-    # Export happens before the short SCIP call.  The SCIP result itself is
-    # intentionally ignored: CPLEX is the engine under test.
+# La exportación ocurre antes de la llamada breve a SCIP. El resultado de SCIP
+# se ignora deliberadamente: CPLEX es el motor bajo prueba.
     solve_with_scip(
         data,
         3.0,

@@ -1,4 +1,4 @@
-"""Plant-specific restricted large-neighborhood search.
+"""Búsqueda de gran vecindario restringida y específica por planta.
 
 Most challenge SKUs have demand in exactly one plant.  Releasing those SKUs
 plant by plant keeps procurement interactions local while allowing a much
@@ -56,7 +56,7 @@ class PlantDestination:
 
 @dataclass(frozen=True)
 class PlantTierTarget:
-    """An incumbent destination just below a focus procurement threshold."""
+    """Un destino de la incumbente apenas bajo un umbral de Procurement enfocado."""
 
     plant: str
     candidate: CandidateBox
@@ -69,7 +69,7 @@ class PlantTierTarget:
 
 
 def single_plant_codes(data: PreparedData) -> dict[str, tuple[str, ...]]:
-    """Return SKUs whose non-zero demand belongs to exactly one plant."""
+    """Devuelve SKU cuya demanda positiva pertenece exactamente a una planta."""
 
     result: dict[str, list[str]] = {plant: [] for plant in PLANTS}
     for product in data.products:
@@ -102,7 +102,7 @@ def rank_plant_destinations(
     *,
     max_gap_to_focus_tier: int = 100_000,
 ) -> tuple[PlantDestination, ...]:
-    """Rank exact designs for coordinated moves by single-plant SKUs.
+    """Ordena diseños exactos para movimientos coordinados de SKU de una sola planta.
 
     The ranking is deliberately optimistic: it ignores deterioration at donor
     types.  It is used only to choose a compact candidate universe; CP-SAT and
@@ -199,7 +199,7 @@ def allowed_plant_internals(
     max_gap_to_focus_tier: int = 100_000,
     freight_policy: FreightPolicy | None = None,
 ) -> tuple[dict[str, tuple[Dimensions, ...]], tuple[PlantDestination, ...]]:
-    """Build a compact, auditable choice set for one plant."""
+    """Construye un conjunto de elección compacto y auditable para una planta."""
 
     policy = freight_policy or FreightPolicy()
     codes = single_plant_codes(data)[plant]
@@ -247,7 +247,7 @@ def allowed_focus_tier_internals(
     max_gap_to_focus_tier: int = 100_000,
     max_targets: int = 8,
 ) -> tuple[dict[str, tuple[Dimensions, ...]], tuple[PlantTierTarget, ...]]:
-    """Release SKUs around used designs immediately below 100k/500k.
+    """Libera SKU de diseños usados inmediatamente por debajo de 100k/500k.
 
     Unlike :func:`allowed_plant_internals`, this focused neighborhood also
     admits multi-plant SKUs when they can feed one of the selected types.  The
@@ -434,8 +434,8 @@ def run_plant_lns(args: argparse.Namespace) -> dict[str, object]:
         "attempts": attempts,
         "best_path": str(best_path),
     }
-    # argparse Namespace contains Paths, which the generic writer cannot
-    # serialize.  The explicit configuration above is normalized here.
+    # El Namespace de argparse contiene Path, que el escritor genérico no puede
+    # serializar. Aquí se normaliza la configuración explícita anterior.
     summary["configuration"] = {
         key: str(value) if isinstance(value, Path) else value
         for key, value in summary["configuration"].items()

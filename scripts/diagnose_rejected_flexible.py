@@ -1,4 +1,4 @@
-"""Diagnose why a flexible-layout solution fails the Kaggle-aligned oracle."""
+"""Diagnostica por qué una solución de layout flexible falla el oráculo alineado con Kaggle."""
 
 from __future__ import annotations
 

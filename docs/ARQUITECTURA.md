@@ -18,15 +18,15 @@ depender de Gurobi, CPLEX, HiGHS ni de un script de campaña.
 
 ## Solvers
 
-- **Ruta predeterminada y open source:** OR-Tools CP-SAT.
-- **MIP open source a través de OR-Tools:** SCIP, cuando esté disponible en la
+- **Ruta predeterminada y de código abierto:** OR-Tools CP-SAT.
+- **MIP de código abierto a través de OR-Tools:** SCIP, cuando esté disponible en la
   distribución instalada de OR-Tools.
-- **Benchmark opcional:** HiGHS (`.[highs]`).
+- **Comparación opcional:** HiGHS (`.[highs]`).
 - **Sólo experimental:** Gurobi y CPLEX. Sus scripts están nombrados
   explícitamente y no se importan desde el núcleo.
 
 El CSV congelado en `baseline/` fue encontrado con Gurobi, pero su factibilidad
-y costo se describen por el núcleo independiente del solver. El flujo decimal
+y costo se describen por el núcleo independiente del solucionador. El flujo decimal
 también puede ejecutarse sin software comercial mediante
 `scripts/run_decimal_scip.py`, que utiliza OR-Tools MPSolver/SCIP.
 
@@ -48,7 +48,7 @@ benchmarks opcionales; los demás son exploraciones reproducibles con el núcleo
 
 1. Agregar una regla de negocio sólo en el núcleo.
 2. Mantener un único evaluador independiente de costos.
-3. Agregar un solver como adaptador, no como dependencia de datos o geometría.
+3. Agregar un solucionador como adaptador, no como dependencia de datos o geometría.
 4. Probar cada ruta contra el mismo validador y el mismo evaluador de costos.
 5. Antes de eliminar un script experimental, reemplazar su evidencia por una
    prueba, un documento o un comando mantenido.

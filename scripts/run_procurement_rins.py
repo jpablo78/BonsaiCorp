@@ -1,4 +1,4 @@
-"""Exact Procurement-tier and LP-RINS large-neighbourhood search for Bonsai."""
+"""Búsqueda exacta de gran vecindario por tiers de Procurement y LP-RINS para Bonsai."""
 
 from __future__ import annotations
 
@@ -136,7 +136,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         lp.assignment_arc_reduced_costs_mills,
     )
 
-    # Specs hold only the economics necessary to reproduce a neighbourhood.
+# Las especificaciones contienen sólo la economía necesaria para reproducir un vecindario.
     specs: list[
         tuple[str, frozenset[str], tuple[Dimensions, ...], bool, dict[str, object]]
     ] = []
@@ -171,8 +171,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     for bundle_size in args.threshold_bundle_sizes:
         if bundle_size < 2:
             continue
-        # Consecutive priority windows combine related near-tier opportunities
-        # while remaining much smaller than a plant-wide neighbourhood.
+# Ventanas consecutivas de prioridad combinan oportunidades relacionadas cerca
+# de tiers y siguen siendo mucho menores que un vecindario de toda una planta.
         for start in range(0, len(selected_exposures) - bundle_size + 1, bundle_size):
             bundle = selected_exposures[start : start + bundle_size]
             free_codes = frozenset(
@@ -214,8 +214,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             {"kind": "rins_threshold", "exposure": _exposure_payload(exposure)},
         )
 
-    # Complete RINS variants: LP fixes the complementary SKU, but the free
-    # rows retain the entire documented candidate universe rather than a pool.
+# Variantes RINS completas: LP fija el SKU complementario, pero las filas libres
+# retienen el universo completo documentado de candidatos, no un conjunto reducido.
     for size in sorted({min(229, len(disagreement)), min(320, len(disagreement))}):
         add_spec(
             f"rins_full_{size}",

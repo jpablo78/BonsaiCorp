@@ -1,9 +1,9 @@
-"""Diagnostic MIP allowing one carton thickness per physical box type.
+"""MIP diagnóstico que permite un grosor de cartón por tipo físico de caja.
 
-This deliberately relaxes the challenge's global-thickness rule.  It must not
-be submitted as an official solution unless that rule is explicitly changed.
-All remaining strict geometry, headspace, ECT, pallet, plant-tier and freight
-rules are reused unchanged.
+Relaja deliberadamente la regla de grosor global del caso. No debe entregarse
+como solución oficial salvo que esa regla cambie explícitamente. Las reglas
+estrictas restantes de geometría, headspace, ECT, pallet, tiers por planta y
+flete se reutilizan sin cambios.
 """
 
 from __future__ import annotations
@@ -113,8 +113,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         model.addConstr(gp.quicksum(row_vars) == 1, name=f"assign_p{product_index}")
     model.update()
 
-    # All relevant prices and freight are exact multiples of this scale.  The
-    # smaller coefficients improve numerical conditioning without rounding.
+# Todos los precios y fletes relevantes son múltiplos exactos de esta escala.
+# Coeficientes menores mejoran el condicionamiento numérico sin redondear.
     all_unit_prices = {
         unit_price_mills(thickness, tier.lower_inclusive)
         for thickness in ALLOWED_THICKNESSES

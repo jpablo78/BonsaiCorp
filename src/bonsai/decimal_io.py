@@ -1,9 +1,8 @@
-"""CSV input/output and validation for decimal-mm box dimensions.
+"""Entrada, salida y validación CSV para dimensiones decimales de caja.
 
-The competition accepted decimal external dimensions.  This module keeps that
-format independent from any particular solver so the same assignment can be
-validated, evaluated and written by OR-Tools/SCIP, HiGHS or a commercial
-backend.
+La competencia aceptó dimensiones exteriores decimales. Este módulo mantiene
+el formato independiente del solver, para validar, evaluar y escribir la misma
+asignación con OR-Tools/SCIP, HiGHS o un backend comercial.
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ def write_decimal_assignment_csv(
     *,
     decimal_places: int,
 ) -> None:
-    """Write one assignment row per SKU without truncating decimal dimensions."""
+    """Escribe una fila por SKU sin truncar dimensiones decimales."""
 
     if decimal_places < 1 or decimal_places > 6:
         raise ValueError("decimal_places must be between 1 and 6")
@@ -58,10 +57,10 @@ def validate_decimal_solution_csv(
     *,
     required_thickness_mm: float | None = None,
 ) -> ValidationResult:
-    """Validate a Kaggle-schema CSV whose exterior dimensions may be decimal.
+    """Valida un CSV Kaggle cuyas dimensiones exteriores pueden ser decimales.
 
-    This applies the same strict fit, headspace, ECT, pallet and cost rules as
-    the integer submission validator, while preserving decimal dimensions.
+    Aplica las mismas reglas estrictas de fit, headspace, ECT, pallet y costo
+    del validador entero, preservando las dimensiones decimales.
     """
 
     source = Path(path)

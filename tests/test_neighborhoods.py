@@ -129,7 +129,7 @@ class TierNeighborhoodTests(unittest.TestCase):
             max_gap_units=5_000,
         )
 
-        # R fits, but adding only D would split the complete (D, S) group.
+    # R encaja, pero agregar sólo D dividiría el grupo completo (D, S).
         stars = build_star_neighborhoods(targets, max_skus=2)
 
         self.assertEqual(stars, ())

@@ -1,4 +1,4 @@
-"""Run the exported exact Bonsai master with the HiGHS MIP backend.
+"""Ejecuta el maestro exacto exportado de Bonsai con el backend MIP HiGHS.
 
 The production master is built by :mod:`bonsai.scip_optimizer` because it
 already contains the independently reviewed linearisation of procurement
@@ -95,7 +95,7 @@ def _complete_mip_start(
     candidates: tuple[object, ...],
     assignment: dict[str, object],
 ) -> np.ndarray:
-    """Return an exact MIP start matching the names from the exported master."""
+    """Devuelve un inicio MIP exacto que coincide con los nombres del maestro exportado."""
 
     candidate_by_internal = {
         candidate.internal: candidate_index
@@ -159,7 +159,7 @@ def _assignment_from_highs_solution(
     candidates: tuple[object, ...],
     fallback: dict[str, object],
 ) -> dict[str, object]:
-    """Decode assignment columns, retaining fixed products from ``fallback``."""
+    """Decodifica columnas de asignación y conserva productos fijos de ``fallback``."""
 
     chosen: dict[int, tuple[float, int]] = {}
     for name, value in zip(column_names, column_values):
@@ -190,7 +190,7 @@ def _info_value(info: object, name: str) -> object | None:
 
 
 def _highs_lp_from_proto(model_proto: object, highspy: object) -> object:
-    """Convert an OR-Tools MPModelProto to HiGHS without textual rounding."""
+    """Convierte un MPModelProto de OR-Tools a HiGHS sin redondeo textual."""
 
     variable_count = len(model_proto.variable)
     row_count = len(model_proto.constraint)
@@ -316,9 +316,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         read_status = highs.readModel(str(model_path))
     if read_status != highspy.HighsStatus.kOk:
         raise RuntimeError(f"HiGHS could not import {model_path}: {read_status}")
-    # Set this only after parsing: HiGHS applies ``time_limit`` to model input
-    # as well as to optimization, and the full exact MPS takes a few seconds
-    # to parse on its own.
+    # Se establece sólo después de analizar: HiGHS aplica ``time_limit`` tanto
+    # a la entrada del modelo como a la optimización, y el MPS exacto completo
+    # tarda algunos segundos en analizarse por sí solo.
     highs.setOptionValue("time_limit", args.time_limit_seconds)
 
     lp = highs.getLp()
@@ -408,7 +408,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
 def _write_temp_assignment(
     output_dir: Path, data: object, assignment: dict[str, object]
 ) -> Path:
-    """Write a short-lived CSV solely to invoke the public independent parser."""
+    """Escribe un CSV temporal sólo para invocar el analizador independiente público."""
 
     path = output_dir / ".highs_candidate_check.csv"
     write_assignment_csv(path, data, assignment)

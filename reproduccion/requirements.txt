@@ -1,0 +1,2 @@
+# Flujo principal CP-SAT, validación y métricas.
+ortools>=9.10,<10

@@ -1,8 +1,8 @@
-"""Solve a strict Bonsai neighbourhood with Gurobi through an MPModelProto bridge.
+"""Resuelve un vecindario estricto de Bonsai con Gurobi mediante un puente MPModelProto.
 
-The model is built by the existing, independently-audited formulation and is
-transferred directly to Gurobi.  This keeps all integer bounds, objective
-coefficients and MIP starts intact, without relying on an MPS/LP export.
+El modelo lo construye la formulación existente y auditada independientemente,
+y se transfiere directamente a Gurobi. Así se conservan cotas enteras,
+coeficientes del objetivo e inicios MIP, sin depender de una exportación MPS/LP.
 """
 
 from __future__ import annotations
@@ -78,7 +78,7 @@ def _finite(value: float) -> bool:
 
 
 def _optional_model_attr(model: gp.Model, name: str) -> float | None:
-    """Return a model attribute when it exists for the solved model type."""
+    """Devuelve un atributo del modelo cuando existe para el tipo resuelto."""
 
     try:
         return float(model.getAttr(name))
@@ -167,9 +167,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         warm_start_source = "submitted"
     else:
         assignment, costs = standardized_baseline(data, args.thickness_mm, policy)
-        # The generated baseline is a direct construction from feasible
-        # candidates.  It becomes the valid all-SKU start for a different
-        # global carton thickness.
+    # La base generada es una construcción directa desde candidatos factibles.
+    # Se vuelve el inicio válido para todos los SKU con un grosor global de
+    # cartón distinto.
         warm = ValidationResult(assignment=assignment, costs=costs)
         warm_start_source = "standardized_baseline_for_requested_thickness"
     candidates, stats = generate_exact_candidates(
@@ -212,9 +212,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     if args.solution_limit is not None:
         model.Params.SolutionLimit = args.solution_limit
     if args.best_obj_stop_usd is not None:
-        # The MIP objective is in scaled mills.  The tiny positive allowance
-        # prevents an otherwise qualifying integral solution from missing the
-        # stop due solely to floating point conversion.
+    # El objetivo MIP está en milésimas escaladas. La pequeña tolerancia positiva
+    # evita que una solución entera que califica no alcance la detención sólo por
+    # la conversión a punto flotante.
         model.Params.BestObjStop = (
             args.best_obj_stop_usd * 1000 / builder.objective_scale_mills + 1e-6
         )

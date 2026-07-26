@@ -28,7 +28,7 @@ suite de pruebas: `pip install -e ".[dev]"`. Los runners de
 HiGHS, CPLEX y Gurobi son opcionales y no forman parte de la ruta soportada de
 producción. Para instalar HiGHS: `pip install -e ".[highs]"`. Los runners
 comerciales requieren además su paquete y licencia local; nunca se necesitan
-para consultar, validar o reproducir el cálculo de costo del baseline.
+para consultar, validar o reproducir el cálculo de costo de la solución base.
 
 Los CSV fuente y la consigna no se publican en este repositorio. Para ejecutar
 el modelo, deben colocarse en un directorio local y pasarse mediante
@@ -68,7 +68,7 @@ y optimiza consolidacion y descuentos:
 ```
 
 `--warm-start` se trata como una incumbente protegida: se agrega como cota dura
-y se devuelve como fallback si el solver no encuentra una mejora estricta. El
+y se devuelve como respaldo si el solucionador no encuentra una mejora estricta. El
 CSV final se escribe de forma atomica y un archivo existente nunca se reemplaza
 por otro de costo igual o mayor. `--restarts N` reparte el presupuesto de tiempo
 entre semillas secuenciales y encadena siempre la mejor incumbente.
@@ -80,7 +80,7 @@ universos diferentes a los de la corrida.
 `--max-extra-pallets B` explora el frente costo de flete/descuentos permitiendo
 como maximo `B` pallets por encima del minimo global SKU por SKU. Es alternativo
 a `--preserve-individual-max-capacity`. Para calcular cotas rigurosas y descartar
-espesores sin gastar tiempo de solver:
+espesores sin gastar tiempo de solucionador:
 
 ```powershell
 .\.venv\Scripts\python.exe -m bonsai lower-bounds `
@@ -93,9 +93,74 @@ Cada corrida conserva `asignacion_ultima_corrida.csv`; `asignacion_optima.csv`
 funciona como best-so-far y no se reemplaza por una salida de costo igual o
 mayor. Esta proteccion supone un solo proceso escritor por directorio de salida.
 
+## Ciclo de vida del catálogo
+
+Estas dos extensiones no reoptimizan el portafolio completo. Permiten evaluar
+un catálogo ya validado cuando cambia la demanda y atender un SKU nuevo sin
+alterar las asignaciones vigentes.
+
+### Recálculo con nueva demanda
+
+El CSV pasado con `--operaciones-override` debe conservar exactamente el
+esquema de `operaciones_planta.csv`, incluir los mismos 427 SKU y contener los
+volúmenes anuales proyectados por planta. La asignación se mantiene fija; se
+recalculan pallets, tiers de Procurement, cartón, flete y costo total.
+
+```powershell
+.\.venv\Scripts\python.exe -m bonsai recalcular-demanda `
+  --data-dir output\cleaned_data `
+  --solution baseline\asignacion_0_1mm.csv `
+  --operaciones-override escenarios\operaciones_proyectadas_2027.csv `
+  --output-dir output\recalculo_demanda_2027
+```
+
+El resultado queda en `resultado_recalculo.json`; informa el costo con demanda
+actual, el costo proyectado y sus diferencias. No se genera un archivo de
+entrega porque la geometría y las asignaciones no cambian.
+
+### Alta incremental de un nuevo producto
+
+Este modo mantiene fijos los SKU existentes, detecta los tipos físicos activos
+en la solución y prueba el nuevo SKU contra cada uno. Elige el tipo factible de
+menor costo incremental, recalculando los tiers afectados. Si no existe ninguna
+caja vigente factible, devuelve `requiere_nuevo_diseno`; no diseña esa caja ni
+asume costos de homologación.
+
+```powershell
+.\.venv\Scripts\python.exe -m bonsai alta-incremental `
+  --data-dir output\cleaned_data `
+  --solution baseline\asignacion_0_1mm.csv `
+  --nuevo-producto examples\nuevo_producto_ejemplo.csv `
+  --operaciones-override escenarios\operaciones_proyectadas_2027.csv `
+  --output-dir output\alta_BR0428
+```
+
+`--operaciones-override` es opcional en este segundo comando: si se omite,
+utiliza la demanda disponible en `--data-dir`. El CSV de nuevo producto tiene
+una sola fila y exactamente estas columnas:
+
+```text
+codigo_producto
+referencia_interna_largo_mm
+referencia_interna_ancho_mm
+referencia_interna_alto_mm
+peso_neto_caja_kg
+volumen_producto_planta_buenos_aires
+volumen_producto_planta_curitiba
+volumen_producto_planta_santiago
+volumen_producto_planta_monterrey
+volumen_producto_planta_bakersfield
+```
+
+Las tres dimensiones de referencia son obligatorias porque la tolerancia de
+±10% se verifica por eje. El comando genera `decision_alta_incremental.json` y,
+si encuentra una caja activa factible, `asignacion_incremental.csv`. Este último
+es un artefacto operativo de 428 filas, no un archivo para submit. Hay un
+ejemplo en `examples/nuevo_producto_ejemplo.csv`.
+
 ## Large-neighborhood search por tiers
 
-El runner de LNS reconstruye targets de descuento desde la incumbente, libera
+El ejecutor de LNS reconstruye objetivos de descuento desde la incumbente, libera
 grupos completos de origen y prueba stars, componentes conectados y uniones de
 ambos. Cada mejora se vuelve a leer con el validador de submissions antes de
 ser aceptada y se conserva como `incumbent_NNNN.csv`:
@@ -113,7 +178,7 @@ ser aceptada y se conserva como `incumbent_NNNN.csv`:
 ```
 
 El modo predeterminado `--target-mode stop` admite mejoras intermedias y se
-detiene al alcanzar el target. `--target-mode hard` convierte cada subproblema
+detiene al alcanzar el objetivo. `--target-mode hard` convierte cada subproblema
 en factibilidad pura contra ese costo. La grilla exacta se enumera una sola vez
 y se reutiliza en todos los vecindarios de la corrida.
 

@@ -1,4 +1,4 @@
-"""Build the concise technical note for the current validated Bonsai solution."""
+"""Construye la nota técnica concisa para la solución vigente validada de Bonsai."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def set_cell_margins(cell, *, top: int = 80, start: int = 120, bottom: int = 80,
 
 
 def set_table_geometry(table, widths: list[int], *, indent: int = 120) -> None:
-    """Apply fixed DXA geometry required by the document design preset."""
+    """Aplica la geometría DXA fija requerida por la plantilla de diseño del documento."""
     total = sum(widths)
     table.autofit = False
     tbl = table._tbl

@@ -1,16 +1,15 @@
-"""Tabu/beam search over coordinated multi-facility reassignment chains.
+"""Búsqueda tabú/de haz sobre cadenas coordinadas de reasignación multiplanta.
 
-The exact and destination LNS models protect the incumbent, which is normally
-desirable but prevents an *ejection chain*: a temporarily costly consolidation
-into one box type can make a second consolidation profitable by restoring a
-source procurement tier.  This module deliberately keeps a bounded beam of
-such intermediate states.
+Los modelos LNS exacto y por destino protegen la incumbente, lo cual suele ser
+deseable pero impide una *cadena de expulsión*: una consolidación temporalmente
+costosa puede volver rentable una segunda al recuperar un tier de Procurement
+en el origen. Este módulo mantiene deliberadamente un haz acotado de esos
+estados intermedios.
 
-The first operation in every chain must move at least four SKUs drawn from at
-least three physical incumbent types.  Later operations may be smaller because
-they act as the refill/swap legs of the same multi-type chain.  A tabu set over
-complete assignments prevents cycling, and only an independently evaluated
-strict improvement is ever written as the final answer.
+La primera operación de cada cadena mueve al menos cuatro SKU de tres tipos
+físicos incumbentes. Las posteriores pueden ser menores porque completan o
+intercambian en la misma cadena. Un conjunto tabú de asignaciones completas
+evita ciclos y sólo se escribe una mejora estricta evaluada independientemente.
 """
 
 from __future__ import annotations
@@ -41,7 +40,7 @@ from .tier_lns import (
 
 @dataclass(frozen=True)
 class FacilityMove:
-    """One exact reassignment into a common physical destination."""
+    """Una reasignación exacta hacia un destino físico común."""
 
     codes: tuple[str, ...]
     target: CandidateBox
@@ -101,7 +100,7 @@ def facility_candidate_pool(
     *,
     destination_pool_size: int,
 ) -> tuple[CandidateBox, ...]:
-    """Return active facilities plus globally promising inactive facilities."""
+    """Devuelve plantas activas y plantas inactivas prometedoras globalmente."""
 
     if destination_pool_size < 1:
         raise ValueError("destination_pool_size must be positive")
@@ -171,12 +170,12 @@ def generate_facility_moves(
     priority_target_types: frozenset[BoxTypeKey] = frozenset(),
     deadline: float | None = None,
 ) -> tuple[FacilityMove, ...]:
-    """Generate low-cost multi-SKU facility moves with a subset beam.
+    """Genera movimientos multiplanta de bajo costo para varios SKU con un haz de subconjuntos.
 
-    The subset beam is deliberately not a pair/triple enumeration.  It starts
-    from the most promising individual legs but grows bundles up to
-    ``max_bundle_size`` and preserves partial bundles spanning more source
-    facilities, which is what exposes procurement-threshold interactions.
+    El haz de subconjuntos no es deliberadamente una enumeración de pares o
+    triples. Parte de los movimientos individuales más prometedores, amplía
+    grupos hasta ``max_bundle_size`` y conserva grupos parciales que abarcan
+    más plantas origen, lo que revela interacciones de umbrales de Procurement.
     """
 
     if min_codes < 1 or min_source_types < 1:
@@ -232,8 +231,8 @@ def generate_facility_moves(
         ]:
             if code not in code_pool:
                 code_pool.append(code)
-        # Combination ordering is based on the ranked pool.  It provides a
-        # canonical representation and avoids evaluating permutations.
+    # El orden de combinación se basa en el conjunto ordenado. Da una representación
+    # canónica y evita evaluar permutaciones.
         beams: list[tuple[tuple[str, ...], int]] = [((), -1)]
         destination_moves: list[FacilityMove] = []
         for bundle_size in range(1, max_bundle_size + 1):
@@ -244,10 +243,10 @@ def generate_facility_moves(
                     move = _wrap_move(state, new_codes, target)
                     if move is None:
                         continue
-                    # A small span bonus prevents all partial beams being
-                    # monopolized by one source type before the third type can
-                    # enter.  It only ranks partial bundles; exact delta ranks
-                    # completed operations and all accepted states.
+    # Una pequeña bonificación de amplitud evita que todos los haces parciales
+    # queden monopolizados por un tipo origen antes de que entre el tercero.
+    # Sólo ordena grupos parciales; el delta exacto ordena operaciones completas
+    # y todos los estados aceptados.
                     span_bonus = min(len(move.source_types), min_source_types) * 100_000
                     expanded.append(
                         (
@@ -272,9 +271,8 @@ def generate_facility_moves(
                     and item[4].delta_mills <= max_move_delta_mills
                 )
 
-        # Retain more than one bundle per facility because tier-completion
-        # chains can require a slightly dearer but compositionally different
-        # first leg.
+    # Se retiene más de un grupo por planta porque las cadenas que completan
+    # tiers pueden requerir un primer paso apenas más caro pero distinto en composición.
         unique: dict[tuple[str, ...], FacilityMove] = {}
         for move in destination_moves:
             key = tuple(sorted(move.codes))
@@ -292,8 +290,9 @@ def generate_facility_moves(
         )
         all_moves.extend(ranked_moves[:per_destination_moves])
 
-    # Priority target types are the sources evacuated by the preceding chain
-    # leg.  Round-robin a small refill quota with the globally cheapest moves.
+    # Los tipos objetivo prioritarios son los orígenes evacuados por el paso
+    # previo de la cadena. Se alterna una pequeña cuota de reposición con los
+    # movimientos globalmente más baratos.
     priority = sorted(
         (move for move in all_moves if move.target_type in priority_target_types),
         key=lambda move: (move.delta_mills, move.pallet_delta, move.codes),
@@ -341,7 +340,7 @@ def tabu_beam_cluster_search(
     max_move_delta_mills: int = 20_000_000,
     max_pallets: int | None = None,
 ) -> ClusterSearchResult:
-    """Run bounded deterministic beam search with assignment-level tabu."""
+    """Ejecuta una búsqueda de haz determinista y acotada con tabú por asignación."""
 
     if duration_seconds <= 0:
         raise ValueError("duration_seconds must be positive")
@@ -405,8 +404,8 @@ def tabu_beam_cluster_search(
                 deadline=deadline,
             )
             generated_moves += len(moves)
-            # Keep a refill quota first, then cheapest alternatives.  Complete
-            # assignment tabu makes explicit inverse moves harmless.
+    # Primero se conserva una cuota de reposición y luego las alternativas más
+    # baratas. El tabú de asignación completa vuelve inocuos los movimientos inversos explícitos.
             priority = [
                 move
                 for move in moves
@@ -470,8 +469,8 @@ def tabu_beam_cluster_search(
                 )
                 children.append(child)
                 if costs.total_mills < best.costs.total_mills:
-                    # A second full calculation guards both the incremental
-                    # delta and the beam bookkeeping before promoting a best.
+    # Un segundo cálculo completo protege tanto el delta incremental como la
+    # contabilidad del haz antes de promover un mejor estado.
                     checked = evaluate_assignments(products, assignment, freight_policy)
                     if checked.total_mills != costs.total_mills:
                         raise AssertionError("best cluster state failed independent audit")
@@ -483,8 +482,8 @@ def tabu_beam_cluster_search(
                 termination = "no_children"
             break
         deepest_level = depth
-        # Cost-first selection with one representative per final destination
-        # before filling the remaining beam slots preserves chain diversity.
+    # La selección por costo, con un representante por destino final antes de
+    # completar los espacios restantes del haz, preserva la diversidad de cadenas.
         children.sort(
             key=lambda node: (
                 node.costs.total_mills,
@@ -512,7 +511,7 @@ def tabu_beam_cluster_search(
         frontier = tuple(diverse)
 
     elapsed = time.monotonic() - started
-    # Never return a deterioration even though the internal beam contains it.
+    # Nunca devuelve un deterioro aunque el haz interno lo contenga.
     if best.costs.total_mills >= initial_costs.total_mills:
         best = initial_node
     return ClusterSearchResult(

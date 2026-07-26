@@ -1,8 +1,8 @@
-"""LP-guided candidate pools for the exact SCIP master problem.
+"""Pools de candidatos guiados por LP para el problema maestro exacto con SCIP.
 
-The full LP relaxation is used only as a search heuristic.  Every candidate
-solution is subsequently solved as an integer MIP and checked by the same
-independent evaluator used by the rest of the project.
+La relajación LP completa se usa sólo como heurística de búsqueda. Cada solución
+candidata se resuelve luego como MIP entero y se verifica con el mismo
+evaluador independiente usado por el resto del proyecto.
 """
 
 from __future__ import annotations
@@ -37,12 +37,12 @@ def build_lp_candidate_pools(
     pool_size: int,
     value_epsilon: float = 1e-7,
 ) -> tuple[dict[str, frozenset[Dimensions]], LpPoolStats]:
-    """Build small, consolidation-aware pools from a full LP solution.
+    """Construye pools pequeños, conscientes de consolidación, desde una solución LP completa.
 
-    Priority is given to positive arcs for the SKU itself.  Remaining slots
-    alternate between designs activated by other SKUs (the useful signal for
-    procurement consolidation) and low-reduced-cost arcs for the SKU.  The
-    incumbent is unconditionally retained.
+    Se priorizan arcos positivos para el propio SKU. Los espacios restantes
+    alternan entre diseños activados por otros SKU, señal útil de consolidación
+    de Procurement, y arcos de bajo costo reducido para ese SKU. La incumbente
+    se conserva incondicionalmente.
     """
 
     if pool_size < 1:
@@ -113,8 +113,8 @@ def build_lp_candidate_pools(
                 item[0].as_tuple(),
             ),
         )
-        # Interleaving keeps both pieces of LP information represented when
-        # the requested pool is very small.
+    # La intercalación conserva ambas piezas de información LP cuando el conjunto
+    # solicitado es muy pequeño.
         for index in range(max(len(activated), len(reduced))):
             if index < len(activated):
                 add(activated[index][0])
@@ -141,7 +141,7 @@ def round_lp_assignment(
     incumbent: Mapping[str, CandidateBox],
     arc_values: Mapping[ArcKey, float],
 ) -> dict[str, CandidateBox]:
-    """Independently round each assignment row to its largest LP arc."""
+    """Redondea independientemente cada fila de asignación a su mayor arco LP."""
 
     candidate_by_internal = {candidate.internal: candidate for candidate in candidates}
     rounded = dict(incumbent)

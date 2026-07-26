@@ -1,4 +1,4 @@
-"""Construye una submission A/B para aislar la interpretación de headspace.
+"""Construye una entrega A/B para aislar la interpretación de headspace.
 
 La prueba parte de un CSV ya aceptado y modifica exclusivamente BR0004. La
 nueva caja respeta volumen, ±10%, pallet, ECT y la formulación de producto

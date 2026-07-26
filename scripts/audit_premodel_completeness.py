@@ -1,14 +1,12 @@
-"""Independent audit of the strict integer-mm candidate premodel.
+"""Auditoría independiente del premodelo estricto de candidatos en milímetros enteros.
 
-The audit does not solve or modify the optimization instance.  It checks that:
+La auditoría no resuelve ni modifica la instancia de optimización. Verifica:
 
-* the pallet axis convention reproduces historical layouts when those fields
-  are present;
-* accelerated compatibility masks equal the independent geometry oracle in
-  both directions for every unpruned representative;
-* capacity stored in every candidate is recomputed correctly; and
-* every pruned representative has a retained candidate with at least as much
-  capacity and a compatibility superset.
+* que la convención de ejes de pallet reproduzca layouts históricos;
+* que las máscaras aceleradas coincidan con el oráculo geométrico independiente;
+* que la capacidad de cada candidato se recalcule correctamente; y
+* que cada representante podado tenga uno retenido con igual o mayor capacidad
+  y un superconjunto de compatibilidad.
 """
 
 from __future__ import annotations
@@ -64,7 +62,7 @@ def main() -> None:
         external_height = parse_number(row["caja_exterior_alto"])
         calculated = {
             "alto": int(1800 // external_height),
-            # Required source convention: box long side along pallet short side.
+# Convención fuente requerida: lado largo de caja sobre lado corto de pallet.
             "largo": int(800 // external_length),
             "ancho": int(1200 // external_width),
         }

@@ -48,8 +48,8 @@ class PlateauDiversificationTests(unittest.TestCase):
     def _zero_cost_case(self):
         products = (self._product("P1"), self._product("P2"))
         source = self._candidate("source_a", 106, 1_000, {"P1"})
-        # The incumbent candidate intentionally has a local compatibility set;
-        # exact_b represents the same physical box in the candidate universe.
+    # El candidato incumbente tiene deliberadamente un conjunto local de
+    # compatibilidad; exact_b representa la misma caja física en el universo.
         incumbent_b = self._candidate("incumbent_b", 107, 800, {"P2"})
         exact_b = self._candidate("exact_b", 107, 800, {"P1", "P2"})
         assignment = {"P1": source, "P2": incumbent_b}

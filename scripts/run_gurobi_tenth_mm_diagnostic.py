@@ -1,4 +1,4 @@
-"""Solve the strict global-3-mm model with 0.1-mm proposed dimensions."""
+"""Resuelve el modelo estricto global de 3 mm con dimensiones propuestas de 0,1 mm."""
 
 from __future__ import annotations
 

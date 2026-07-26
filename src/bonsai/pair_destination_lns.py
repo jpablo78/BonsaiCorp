@@ -1,4 +1,4 @@
-"""Focused exact search over pairs of destination box designs.
+"""Búsqueda exacta enfocada sobre pares de diseños de caja destino.
 
 Unlike :mod:`bonsai.multi_destination_lns`, this runner releases the *union*
 of the SKUs compatible with the two destinations.  A released SKU may stay in
@@ -45,7 +45,7 @@ PairKey = frozenset[DesignKey]
 
 @dataclass(frozen=True)
 class PairDestinationWorkItem:
-    """One incumbent-or-A-or-B exact subproblem."""
+    """Un subproblema exacto con opciones incumbente, A o B."""
 
     pair_id: str
     left: DestinationWorkItem
@@ -79,7 +79,7 @@ def _incumbent_source_groups(
     products: Iterable[Product],
     incumbent_assignment: Mapping[str, CandidateBox],
 ) -> tuple[tuple[frozenset[str], int], ...]:
-    """Return SKU membership and total demand for every incumbent design."""
+    """Devuelve membresía de SKU y demanda total para cada diseño incumbente."""
 
     product_by_code = {product.code: product for product in products}
     codes_by_type: dict[tuple[float, float, float, float], set[str]] = {}
@@ -99,7 +99,7 @@ def pair_complementarity_metrics(
     right_codes: frozenset[str],
     source_groups: Iterable[tuple[frozenset[str], int]],
 ) -> tuple[int, int, int, int]:
-    """Compute exact overlap/source-complementarity ranking features.
+    """Calcula atributos de ranking de solapamiento y complementariedad de origen.
 
     A complementary source group is fully movable by the union of A and B but
     is not fully movable by either destination alone.  Such a group can be
@@ -142,7 +142,7 @@ def rank_destination_pairs(
     max_skus: int | None = 220,
     max_pairs: int | None = 128,
 ) -> tuple[PairDestinationWorkItem, ...]:
-    """Rank all destination pairs without restricting to overlapping SKUs."""
+    """Ordena todos los pares destino sin limitarse a SKU solapados."""
 
     if min_skus < 1:
         raise ValueError("min_skus must be positive")
@@ -168,9 +168,10 @@ def rank_destination_pairs(
     destination_masks = tuple(code_mask(item.product_codes) for item in ranked)
     group_masks = tuple((code_mask(codes), volume) for codes, volume in source_groups)
 
-    # Keeping all ~770k PairDestinationWorkItem instances alive is both slower
-    # and needlessly memory hungry.  A bounded min-heap retains exactly the
-    # requested top-K while scanning the complete pair universe.
+    # Mantener vivas las aproximadamente 770 mil instancias de
+    # PairDestinationWorkItem es más lento y consume memoria innecesariamente.
+    # Un min-heap acotado retiene exactamente el top-K pedido al recorrer el
+    # universo completo de pares.
     heap: list[tuple[tuple[int, ...], int, int, tuple[int, int, int, int]]] = []
     for left_index, right_index in combinations(range(len(ranked)), 2):
         left = ranked[left_index]
@@ -252,7 +253,7 @@ def rank_destination_pairs(
 def allowed_internals_for_pair(
     item: PairDestinationWorkItem,
 ) -> dict[str, tuple[Dimensions, ...]]:
-    """Map every released SKU to its compatible subset of {A, B}."""
+    """Asocia cada SKU liberado con su subconjunto compatible de {A, B}."""
 
     result: dict[str, tuple[Dimensions, ...]] = {}
     for code in item.product_codes:
@@ -270,7 +271,7 @@ def load_excluded_pairs(
     *,
     statuses: frozenset[str] | None = None,
 ) -> frozenset[PairKey]:
-    """Load every pair of geometries already co-offered in prior attempts."""
+    """Carga cada par de geometrías ya ofrecido conjuntamente en intentos previos."""
 
     excluded: set[PairKey] = set()
     for path in summary_paths:

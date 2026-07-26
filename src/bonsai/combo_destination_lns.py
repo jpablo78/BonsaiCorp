@@ -1,10 +1,10 @@
-"""Diverse triple/quad destination LNS using the reduced SCIP backend.
+"""LNS diverso de destinos triples o cuádruples con el backend SCIP reducido.
 
-The earlier multi-destination search required every released SKU to have at
-least two destination choices.  Here the union of all compatible SKUs is
-released, so a source box type may be evacuated by splitting its products
-among three or four different receiving designs.  Non-released SKUs are
-absorbed as constants by :func:`bonsai.scip_optimizer.solve_with_scip`.
+La búsqueda multidestino anterior exigía que cada SKU liberado tuviera al menos
+dos destinos. Aquí se libera la unión de todos los SKU compatibles, de modo que
+un tipo origen puede evacuarse repartiendo productos entre tres o cuatro
+diseños receptores. Los SKU no liberados se absorben como constantes mediante
+:func:`bonsai.scip_optimizer.solve_with_scip`.
 """
 
 from __future__ import annotations
@@ -81,7 +81,7 @@ class ComboDestinationWorkItem:
 
 
 def load_covered_combinations(path: Path, size: int) -> frozenset[ComboKey]:
-    """Expand each prior multi-destination attempt into its contained combos."""
+    """Expande cada intento previo multidestino en las combinaciones que contiene."""
 
     if size < 2:
         raise ValueError("combination size must be at least two")
@@ -104,11 +104,11 @@ def combo_complementarity_metrics(
     destination_masks: Sequence[int],
     source_groups: Iterable[tuple[int, int]],
 ) -> tuple[int, int, int, int, int, int]:
-    """Return overlap and exact set-cover complementarity metrics.
+    """Devuelve métricas de solapamiento y complementariedad exacta de cobertura.
 
-    ``all_member_essential`` means that removing *any* destination leaves at
-    least one SKU of the source type uncovered.  Therefore the type can only
-    be fully evacuated by using every member of this combination.
+    ``all_member_essential`` indica que quitar *cualquier* destino deja sin
+    cobertura al menos un SKU del tipo origen. Por eso el tipo sólo puede
+    evacuarse por completo usando todos los miembros de la combinación.
     """
 
     union_mask = 0
@@ -157,7 +157,7 @@ def _union_without_index(masks: Sequence[int], removed_index: int) -> int:
 
 
 def _sample_destination_indices(count: int, pool_size: int) -> tuple[int, ...]:
-    """Blend high rank with deterministic coverage of the long tail."""
+    """Combina alto ranking con cobertura determinista de la cola larga."""
 
     if pool_size >= count:
         return tuple(range(count))
@@ -249,8 +249,8 @@ def _select_diverse(
             occurrence[index] = occurrence.get(index, 0) + 1
         if len(selected) >= count:
             return tuple(selected)
-    # The cap promotes diversity, but it must not prevent the requested work
-    # count. Fill deterministically from the remaining global ranking.
+    # El límite promueve diversidad, pero no debe impedir la cantidad de
+    # trabajo solicitada. Se completa de forma determinista desde el ranking global restante.
     for _, indices, metrics in ranked_entries:
         if indices in selected_keys:
             continue
@@ -321,8 +321,9 @@ def build_ranked_triples_and_quads(
         ]
     ] = []
     seen_quads: set[tuple[int, ...]] = set()
-    # Extend a broad high-quality triple pool, not only the selected 300, so
-    # quads can introduce tail destinations and distinct source covers.
+    # Se amplía un conjunto amplio de triples de alta calidad, no sólo los 300
+    # seleccionados, para que los cuádruples incorporen destinos de cola y
+    # coberturas origen distintas.
     for _, triple_indices, _ in ranked_triples[: max(2_000, triple_count * 5)]:
         triple_set = set(triple_indices)
         for fourth in sample:

@@ -1,14 +1,13 @@
-"""Incremental simulated annealing over the exact candidate assignment space.
+"""Recocido simulado incremental sobre el espacio exacto de asignación de candidatos.
 
-The CP-SAT model is good at proving and coordinating tier changes, but a warm
-assignment can also be explored cheaply with one-SKU moves.  This module keeps
-the exact commercial state (physical box type by plant) in memory, so one move
-costs O(number of plants) instead of requiring a complete cost evaluation.
+El modelo CP-SAT sirve para demostrar y coordinar cambios de tiers, pero una
+asignación inicial también puede explorarse económicamente con movimientos de
+un SKU. Este módulo conserva en memoria el estado comercial exacto, por tipo
+físico de caja y planta, de modo que un movimiento cuesta O(cantidad de plantas).
 
-Temporary degradations may be accepted by the annealing walk.  Only the best
-assignment encountered is returned, and that assignment is independently
-checked with :func:`bonsai.costs.evaluate_assignments` before it leaves the
-module.
+El recorrido de recocido puede aceptar deterioros temporales. Sólo devuelve la
+mejor asignación hallada y la verifica de forma independiente con
+:func:`bonsai.costs.evaluate_assignments` antes de devolverla.
 """
 
 from __future__ import annotations
@@ -43,7 +42,7 @@ def _candidate_rank(candidate: CandidateBox) -> tuple[BoxTypeKey, str]:
 
 @dataclass(frozen=True)
 class AnnealingMove:
-    """Exact cost and pallet delta for one SKU reassignment."""
+    """Delta exacto de costo y pallets para reasignar un SKU."""
 
     code: str
     source_type: BoxTypeKey
@@ -61,7 +60,7 @@ class AnnealingMove:
 
 @dataclass(frozen=True)
 class AnnealingGroupMove:
-    """Exact simultaneous reassignment of several SKUs to one physical type."""
+    """Reasignación simultánea exacta de varios SKU a un tipo físico."""
 
     codes: tuple[str, ...]
     source_types: tuple[BoxTypeKey, ...]
@@ -79,7 +78,7 @@ class AnnealingGroupMove:
 
 @dataclass(frozen=True)
 class AnnealingResult:
-    """Best validated state plus diagnostics about the exploratory walk."""
+    """Mejor estado validado y diagnósticos sobre el recorrido exploratorio."""
 
     assignment: dict[str, CandidateBox]
     costs: CostBreakdown
@@ -100,11 +99,12 @@ class AnnealingResult:
 
 
 class IncrementalAssignmentState:
-    """Mutable assignment with exact O(plants) one-SKU move accounting.
+    """Asignación mutable con contabilidad exacta O(plantas) por movimiento de un SKU.
 
-    Public use is primarily useful for testing custom proposal strategies.  A
-    calculated move becomes stale after another move changes either involved
-    physical type, and :meth:`apply` rejects it rather than corrupting totals.
+    Su uso público sirve principalmente para probar estrategias de propuesta
+    personalizadas. Un movimiento calculado queda obsoleto si otro movimiento
+    cambia alguno de los tipos físicos involucrados; :meth:`apply` lo rechaza
+    para no corromper los totales.
     """
 
     def __init__(
@@ -225,11 +225,11 @@ class IncrementalAssignmentState:
     def calculate_group_move(
         self, codes: Iterable[str], target: CandidateBox
     ) -> AnnealingGroupMove | None:
-        """Calculate an exact simultaneous move without changing the state.
+        """Calcula un movimiento simultáneo exacto sin alterar el estado.
 
-        Evaluating the SKUs together is essential around procurement thresholds:
-        individually unattractive moves can become profitable once their combined
-        volume crosses a discount tier.
+        Evaluar los SKU en conjunto es esencial cerca de los umbrales de
+        Procurement: movimientos individualmente poco atractivos pueden ser
+        rentables cuando su volumen combinado alcanza un tier de descuento.
         """
 
         unique_codes = tuple(dict.fromkeys(codes))
@@ -335,7 +335,7 @@ class IncrementalAssignmentState:
         self.types += move.type_delta
 
     def validate(self) -> CostBreakdown:
-        """Independently recompute and assert all tracked objective quantities."""
+        """Recalcula y verifica de forma independiente todas las cantidades del objetivo."""
 
         checked = evaluate_assignments(
             self.products, self.assignment, self.freight_policy
@@ -367,7 +367,7 @@ def build_targets_by_code(
     *,
     free_product_codes: Iterable[str] | None = None,
 ) -> dict[str, tuple[CandidateBox, ...]]:
-    """Precompute and physically deduplicate feasible targets for every free SKU."""
+    """Precalcula y deduplica físicamente objetivos factibles para cada SKU libre."""
 
     product_codes = {product.code for product in products}
     if free_product_codes is None:
@@ -387,7 +387,7 @@ def build_targets_by_code(
         code: {} for code in free_codes
     }
 
-    # Include the incumbent design so every accepted move remains reversible.
+    # Incluye el diseño incumbente para que todo movimiento aceptado sea reversible.
     for code in free_codes:
         incumbent = assignment_by_code[code]
         by_code[code][box_type_key(incumbent)] = incumbent
@@ -410,13 +410,13 @@ def minimum_pallets_for_candidates(
     targets_by_code: dict[str, tuple[CandidateBox, ...]],
     assignment_by_code: dict[str, CandidateBox],
 ) -> int:
-    """Return the independent per-SKU pallet lower bound for this search space."""
+    """Devuelve la cota inferior independiente de pallets por SKU de este espacio."""
 
     minimum = 0
     for product in products:
         targets = targets_by_code.get(product.code)
         if not targets:
-            # Fixed products still contribute their incumbent pallets.
+    # Los productos fijos siguen aportando sus pallets de la incumbente.
             targets = (assignment_by_code[product.code],)
         minimum += min(
             sum(freight_pallets(product, candidate, plant) for plant in PLANTS)
@@ -442,13 +442,13 @@ def _random_alternative(
     *,
     prefer_used: bool,
 ) -> CandidateBox | None:
-    """Choose a physical alternative, optionally preferring an active type."""
+    """Elige una alternativa física y opcionalmente prefiere un tipo activo."""
 
     current_type = box_type_key(state.assignment[code])
     if prefer_used:
-        # Rejection sampling avoids rebuilding a potentially large filtered
-        # tuple on every proposal.  Twelve attempts still give active types a
-        # strong bias, then gracefully fall back to the full universe.
+    # El muestreo por rechazo evita reconstruir una tupla filtrada potencialmente
+    # grande en cada propuesta. Doce intentos dan un sesgo fuerte a tipos activos
+    # y luego se vuelve ordenadamente al universo completo.
         for _ in range(12):
             candidate = rng.choice(choices)
             candidate_type = box_type_key(candidate)
@@ -479,11 +479,11 @@ def guided_single_proposal(
     used_target_probability: float,
     greediness: float,
 ) -> AnnealingMove | None:
-    """Sample exact moves and usually return the one with the lowest delta.
+    """Muestrea movimientos exactos y normalmente devuelve el de menor delta.
 
-    Sampling retains diversity without scanning every SKU/candidate pair.  The
-    active-type preference makes consolidation and tier crossings substantially
-    less rare than under uniform code/candidate sampling.
+    El muestreo conserva diversidad sin recorrer cada par SKU/candidato. La
+    preferencia por tipos activos vuelve mucho menos infrecuentes la
+    consolidación y los cruces de tier que un muestreo uniforme.
     """
 
     sampled: list[AnnealingMove] = []
@@ -527,7 +527,7 @@ def guided_group_proposal(
     greediness: float,
     max_group_size: int,
 ) -> AnnealingGroupMove | None:
-    """Propose a small coordinated consolidation into a shared destination."""
+    """Propone una pequeña consolidación coordinada hacia un destino compartido."""
 
     anchor = guided_single_proposal(
         state,
@@ -553,9 +553,10 @@ def guided_group_proposal(
     group_size = min(rng.randint(2, max_group_size), len(eligible) + 1)
     chosen = [anchor.code]
     best_group: AnnealingGroupMove | None = None
-    # Greedily evaluate the *joint* delta after every possible addition.  This
-    # sees all-units discount jumps which an individual companion ranking
-    # cannot see.  Sampling bounds the work independently of dataset size.
+    # Evalúa vorazmente el delta *conjunto* después de cada adición posible. Así
+    # detecta saltos de descuento sobre todas las unidades que un ranking de
+    # acompañantes individuales no puede ver. El muestreo acota el trabajo sin
+    # depender del tamaño del dataset.
     remaining = eligible
     while len(chosen) < group_size and remaining:
         companion_sample = rng.sample(
@@ -607,16 +608,16 @@ def simulated_annealing(
     max_group_size: int = 4,
     restart_interval_steps: int | None = 250_000,
 ) -> AnnealingResult:
-    """Explore exact assignments with reproducible one-SKU simulated annealing.
+    """Explora asignaciones exactas con recocido simulado reproducible por SKU.
 
-    ``max_extra_pallets`` has the same meaning as in the exact optimizer: it is
-    added to the sum of each SKU's minimum pallet count in the supplied search
-    space.  ``max_pallets`` is an alternative absolute limit.  The incumbent
-    must already satisfy the selected limit.
+    ``max_extra_pallets`` tiene el mismo significado que en el optimizador
+    exacto: se suma al mínimo de pallets de cada SKU dentro del espacio de
+    búsqueda provisto. ``max_pallets`` es un límite absoluto alternativo. La
+    incumbente ya debe cumplir el límite elegido.
 
-    A duration and a step limit can both be supplied; the first one reached
-    stops the walk.  Set ``validation_interval`` to periodically audit accepted
-    states during development.  The returned best state is always audited.
+    Pueden indicarse a la vez límites de duración y de pasos; el primero que se
+    alcance detiene el recorrido. ``validation_interval`` permite auditar
+    periódicamente los estados aceptados. El mejor estado devuelto siempre se audita.
     """
 
     if duration_seconds is not None and duration_seconds <= 0:
@@ -654,9 +655,9 @@ def simulated_annealing(
         raise ValueError("restart_interval_steps must be positive")
 
     state = IncrementalAssignmentState(products, assignment_by_code, freight_policy)
-    # Build the full universe once.  Pallet budget semantics deliberately use
-    # the global per-SKU minimum even when only an LNS subset is free, matching
-    # the exact optimizer's budget definition.
+    # Construye el universo completo una sola vez. La semántica del presupuesto
+    # de pallets usa deliberadamente el mínimo global por SKU, aun si sólo un
+    # subconjunto LNS está libre, igual que la definición del optimizador exacto.
     all_targets = build_targets_by_code(
         products,
         assignment_by_code,
@@ -706,8 +707,8 @@ def simulated_annealing(
             and steps > 0
             and steps % restart_interval_steps == 0
         ):
-            # Restarting at the best known state both discards an unproductive
-            # excursion and reheats the next cycle.
+    # Reiniciar en el mejor estado conocido descarta una excursión improductiva
+    # y recalienta el ciclo siguiente.
             state = IncrementalAssignmentState(
                 products, best_assignment, freight_policy
             )

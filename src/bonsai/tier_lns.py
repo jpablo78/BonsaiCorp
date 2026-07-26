@@ -1,10 +1,9 @@
-"""Reusable tier-focused large-neighborhood-search orchestration.
+"""Orquestación reutilizable de búsqueda de gran vecindario centrada en tiers.
 
-The CP-SAT model lives in :mod:`bonsai.optimizer`; this module is deliberately
-limited to scheduling neighborhoods, protecting the incumbent and producing
-auditable outputs.  Every accepted assignment is round-tripped through the
-same CSV validator used for Kaggle submissions before it becomes the next
-incumbent.
+El modelo CP-SAT vive en :mod:`bonsai.optimizer`; este módulo se limita
+deliberadamente a programar vecindarios, proteger la incumbente y producir
+salidas auditables. Cada asignación aceptada pasa por el mismo validador CSV
+usado para Kaggle antes de convertirse en la siguiente incumbente.
 """
 
 from __future__ import annotations
@@ -31,7 +30,7 @@ from .solution_validation import ValidationResult, validate_solution_csv
 
 @dataclass(frozen=True)
 class WorkItem:
-    """One deterministic set of SKUs released in an LNS subproblem."""
+    """Un conjunto determinista de SKU liberados en un subproblema LNS."""
 
     neighborhood_id: str
     source_kind: str
@@ -62,11 +61,11 @@ def generate_work_items(
     max_skus: int | None = None,
     max_neighborhoods: int | None = None,
 ) -> tuple[WorkItem, ...]:
-    """Expand a tier plan into unique stars, components and their unions.
+    """Expande un plan de tiers en estrellas, componentes y uniones únicos.
 
-    Duplicate SKU sets are removed because they induce the same LNS model.
-    Insertion order intentionally tries the smaller, more focused individual
-    neighborhoods before their broader combinations.
+    Los conjuntos de SKU duplicados se eliminan porque inducen el mismo modelo
+    LNS. El orden de inserción prueba deliberadamente vecindarios individuales
+    más pequeños y enfocados antes de sus combinaciones más amplias.
     """
 
     if max_star_combination < 1:
@@ -183,9 +182,10 @@ def _atomic_write_json(path: Path, payload: dict[str, object]) -> None:
     pending = path.parent / f".{path.name}.{os.getpid()}.{uuid4().hex}.pending"
     try:
         write_json(pending, payload)
-        # On Windows a concurrent read can briefly hold a non-shareable handle
-        # on the destination.  Keep the atomic replace semantics, but tolerate
-        # that transient lock instead of aborting a long optimization run.
+    # En Windows, una lectura concurrente puede retener brevemente un
+    # identificador no compartible del destino. Se conserva el reemplazo
+    # atómico, pero se tolera ese bloqueo transitorio para no abortar una
+    # corrida larga.
         for attempt in range(20):
             try:
                 os.replace(pending, path)
@@ -230,7 +230,7 @@ def _next_snapshot_number(output_dir: Path) -> int:
 
 
 def run_tier_lns(args: argparse.Namespace) -> dict[str, object]:
-    """Run iterative tier LNS and return the JSON-serializable audit summary."""
+    """Ejecuta LNS iterativo por tiers y devuelve el resumen auditable serializable en JSON."""
 
     if args.rounds < 1:
         raise ValueError("--rounds must be at least 1")
@@ -445,8 +445,8 @@ def run_tier_lns(args: argparse.Namespace) -> dict[str, object]:
                     termination = "target_met"
                     break
                 if improved_this_round:
-                    # Incumbent type groups have changed; rebuild the tier plan
-                    # before releasing another whole-source-group neighborhood.
+    # Cambiaron los grupos de tipos de la incumbente; se reconstruye el plan
+    # de tiers antes de liberar otro vecindario completo de grupos origen.
                     break
 
             if termination == "target_met":

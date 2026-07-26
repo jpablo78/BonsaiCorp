@@ -1,10 +1,9 @@
-"""Single-destination binary large-neighborhood search.
+"""Búsqueda de gran vecindario binaria con un único destino.
 
-Each subproblem chooses one exact box design and lets every compatible SKU
-choose only between its incumbent design and that destination.  This is a
-small, targeted complement to the broader tier LNS: it exposes coordinated
-tier crossings without giving CP-SAT the full exact design universe for every
-released SKU.
+Cada subproblema elige un diseño exacto de caja y permite a cada SKU compatible
+elegir sólo entre su diseño incumbente y ese destino. Es un complemento pequeño
+y dirigido del LNS de tiers: expone cruces coordinados de tiers sin dar a
+CP-SAT el universo completo de diseños para cada SKU liberado.
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ from .tier_lns import (
 
 @dataclass(frozen=True)
 class DestinationWorkItem:
-    """One incumbent-or-destination binary subproblem."""
+    """Un subproblema binario entre la incumbente y un destino."""
 
     destination_id: str
     candidate: CandidateBox
@@ -61,7 +60,7 @@ class DestinationWorkItem:
 
     @property
     def net_all_move_opportunity_mills(self) -> int:
-        """Optimistic gross opportunity less the known all-move freight loss."""
+        """Oportunidad bruta optimista menos la pérdida conocida de flete al mover todo."""
 
         return self.gross_opportunity_mills - self.freight_penalty_if_all_move_mills
 
@@ -77,7 +76,7 @@ def _physical_candidate_rank(candidate: CandidateBox) -> tuple[object, ...]:
 def _representative_candidates(
     exact_candidates: Iterable[CandidateBox],
 ) -> tuple[CandidateBox, ...]:
-    """Consolidate accidental duplicate physical designs deterministically."""
+    """Consolida de forma determinista diseños físicos duplicados accidentalmente."""
 
     grouped: dict[tuple[float, float, float, float], list[CandidateBox]] = {}
     for candidate in exact_candidates:
@@ -114,13 +113,13 @@ def rank_destination_work_items(
     min_gross_opportunity_mills: int = 1,
     max_destinations: int | None = None,
 ) -> tuple[DestinationWorkItem, ...]:
-    """Rank exact destinations by optimistic tier and freight opportunity.
+    """Ordena destinos exactos por oportunidad optimista de tier y flete.
 
-    The procurement metric prices the potential consolidated target volume at
-    its attainable tier while deliberately ignoring source-tier deterioration.
-    Freight uses only positive per-SKU pallet savings.  Consequently this is a
-    deterministic prioritization score, not a promise of net improvement; the
-    optimizer and independent validator decide whether a move is accepted.
+    La métrica de Procurement valora el volumen potencial consolidado en el
+    tier alcanzable e ignora deliberadamente el deterioro de tiers origen. El
+    flete usa sólo ahorros positivos de pallets por SKU. Es una priorización
+    determinista, no una promesa de mejora neta; el optimizador y el validador
+    independiente deciden si se acepta el movimiento.
     """
 
     if min_skus < 1:
@@ -267,7 +266,7 @@ def rank_destination_work_items(
 def allowed_internals_for_destination(
     item: DestinationWorkItem,
 ) -> dict[str, tuple[Dimensions, ...]]:
-    """Return the destination side of each incumbent-or-target choice."""
+    """Devuelve el lado destino de cada elección entre incumbente y objetivo."""
 
     return {code: (item.candidate.internal,) for code in item.product_codes}
 

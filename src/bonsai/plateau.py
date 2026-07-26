@@ -1,4 +1,4 @@
-"""Diversification over the exact zero-cost assignment plateau.
+"""Diversificación sobre la meseta exacta de asignaciones con costo cero.
 
 The master problem often has many assignments with the same objective value.
 Those alternatives are useful as genuinely different CP-SAT or LNS seeds, but
@@ -25,7 +25,7 @@ from .models import CandidateBox, CostBreakdown, PLANTS, Product
 
 @dataclass(frozen=True)
 class PlateauMove:
-    """One feasible reassignment of a SKU to a different physical box type."""
+    """Una reasignación factible de un SKU a un tipo físico de caja distinto."""
 
     code: str
     source_type: BoxTypeKey
@@ -43,7 +43,7 @@ class PlateauMove:
 
 @dataclass(frozen=True)
 class PlateauWalkResult:
-    """Most diversified assignment found during a zero-cost random walk."""
+    """Asignación más diversificada hallada durante un recorrido aleatorio de costo cero."""
 
     assignment: dict[str, CandidateBox]
     moves: tuple[PlateauMove, ...]
@@ -61,13 +61,13 @@ def _packaging_cost_mills(thickness_mm: float, volume: int) -> int:
 
 
 def _candidate_rank(candidate: CandidateBox) -> tuple[str, tuple[int, int, int]]:
-    """Stable choice when one geometry has several solver-local candidates."""
+    """Elección estable cuando una geometría tiene varios candidatos locales del solucionador."""
 
     return candidate.candidate_id, candidate.internal.as_tuple()
 
 
 class _IncrementalPlateauState:
-    """Mutable internal state whose deltas mirror ``evaluate_assignments``."""
+    """Estado interno mutable cuyos deltas reflejan ``evaluate_assignments``."""
 
     def __init__(
         self,
@@ -75,8 +75,8 @@ class _IncrementalPlateauState:
         assignment_by_code: dict[str, CandidateBox],
         freight_policy: FreightPolicy,
     ) -> None:
-        # The independent evaluator is both an input validation step and the
-        # reference value against which incremental accounting is checked.
+    # El evaluador independiente es tanto una validación de entrada como el
+    # valor de referencia contra el cual se comprueba la contabilidad incremental.
         self.reference_costs = evaluate_assignments(
             products, assignment_by_code, freight_policy
         )
@@ -111,7 +111,7 @@ class _IncrementalPlateauState:
         source_type = box_type_key(source)
         target_type = box_type_key(target)
         if source_type == target_type:
-            # Changing only a solver-local candidate ID is not diversification.
+    # Cambiar sólo un identificador de candidato local del solucionador no es diversificar.
             return None
         if target.thickness_mm != self.thickness_mm:
             return None
@@ -188,7 +188,7 @@ def _targets_by_code(
     assignment_by_code: dict[str, CandidateBox],
     candidates: Iterable[CandidateBox],
 ) -> dict[str, tuple[CandidateBox, ...]]:
-    """Deduplicate eligible targets by physical geometry for every SKU."""
+    """Deduplica objetivos elegibles por geometría física para cada SKU."""
 
     product_codes = {product.code for product in products}
     thicknesses = {
@@ -201,8 +201,8 @@ def _targets_by_code(
         code: {} for code in product_codes
     }
 
-    # Always retain each SKU's starting design.  This makes reverse moves
-    # available even when the external candidate universe omitted incumbents.
+    # Siempre retiene el diseño inicial de cada SKU. Así hay movimientos inversos
+    # incluso si el universo externo de candidatos omitió incumbentes.
     for code, candidate in assignment_by_code.items():
         by_code[code][box_type_key(candidate)] = candidate
 
@@ -226,7 +226,7 @@ def enumerate_zero_cost_moves(
     candidates: Iterable[CandidateBox],
     freight_policy: FreightPolicy,
 ) -> tuple[PlateauMove, ...]:
-    """Return all feasible one-SKU moves whose total delta is exactly zero.
+    """Devuelve todos los movimientos factibles de un SKU cuyo delta total es cero.
 
     Packaging deltas include tier changes at both the source and destination
     physical designs independently for every plant.  Freight remains SKU-level
@@ -250,7 +250,7 @@ def enumerate_zero_cost_moves(
 def apply_plateau_move(
     assignment_by_code: dict[str, CandidateBox], move: PlateauMove
 ) -> dict[str, CandidateBox]:
-    """Return an assignment copy with ``move`` applied after a stale check."""
+    """Devuelve una copia de asignación con ``move`` aplicado tras verificar vigencia."""
 
     if move.code not in assignment_by_code:
         raise ValueError(f"unknown product code in plateau move: {move.code}")
@@ -272,7 +272,7 @@ def diversify_assignment(
     avoid_revisits: bool = True,
     max_pallets: int | None = None,
 ) -> PlateauWalkResult:
-    """Walk across exact zero-cost moves and return the farthest state visited.
+    """Recorre movimientos exactos de costo cero y devuelve el estado más lejano visitado.
 
     Distance is the number of SKUs assigned to a different physical geometry
     than at the start.  Returning the farthest state, instead of blindly the

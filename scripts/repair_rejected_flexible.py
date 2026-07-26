@@ -1,4 +1,4 @@
-"""Keep only Kaggle-aligned rows from a rejected flexible-layout solution."""
+"""Conserva sólo filas alineadas con Kaggle de una solución de layout flexible rechazada."""
 
 from __future__ import annotations
 

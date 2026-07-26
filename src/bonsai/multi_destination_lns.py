@@ -1,20 +1,20 @@
-"""Multi-destination exact large-neighborhood search.
+"""Búsqueda exacta de gran vecindario con múltiples destinos.
 
-The single-destination runner is intentionally narrow: each released SKU can
-only stay in its incumbent design or move to one target design.  This module
-combines two to eight promising exact destinations in one CP-SAT subproblem.
-Each SKU sees only the destinations with which it is compatible, plus its
-incumbent (added by :func:`bonsai.optimizer.solve_for_thickness`).
+El ejecutor de un destino es deliberadamente acotado: cada SKU liberado puede
+quedarse en su diseño incumbente o moverse a un destino. Este módulo combina
+entre dos y ocho destinos exactos prometedores en un subproblema CP-SAT. Cada
+SKU ve sólo destinos compatibles, más su incumbente, agregada por
+:func:`bonsai.optimizer.solve_for_thickness`.
 
-Neighborhoods are assembled deterministically from four complementary views:
+Los vecindarios se arman determinísticamente desde cuatro vistas:
 
-* overlap of compatible SKUs;
-* overlap of incumbent source box types (coordinated source evacuation);
-* destinations with procurement-tier opportunities;
-* contiguous windows of the globally ranked destination list.
+* solapamiento de SKU compatibles;
+* solapamiento de tipos origen incumbentes;
+* destinos con oportunidades de tiers de Procurement;
+* ventanas contiguas de la lista global de destinos ordenados.
 
-Every accepted result is independently round-tripped through the submission
-CSV validator before it replaces the incumbent.
+Cada resultado aceptado se verifica independientemente con el validador CSV
+antes de reemplazar la incumbente.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ from .tier_lns import (
 
 @dataclass(frozen=True)
 class MultiDestinationWorkItem:
-    """One restricted subproblem containing several exact destinations."""
+    """Un subproblema restringido que contiene varios destinos exactos."""
 
     neighborhood_id: str
     source_kind: str
@@ -145,11 +145,11 @@ def build_multi_destination_work_items(
     max_skus: int | None = 220,
     max_neighborhoods: int | None = 128,
 ) -> tuple[MultiDestinationWorkItem, ...]:
-    """Combine ranked single destinations into focused multi-choice models.
+    """Combina destinos individuales ordenados en modelos enfocados de opciones múltiples.
 
-    The input order is the global destination ranking.  The builder is fully
-    deterministic and removes duplicate destination sets, irrespective of the
-    strategy that discovered them.
+    El orden de entrada es el ranking global de destinos. El constructor es
+    plenamente determinista y elimina conjuntos de destinos duplicados,
+    sin importar la estrategia que los descubrió.
     """
 
     if min_destinations < 2:
@@ -183,8 +183,9 @@ def build_multi_destination_work_items(
     rank_index = {item.destination_id: index for index, item in enumerate(ranked)}
     raw: list[tuple[str, tuple[DestinationWorkItem, ...]]] = []
 
-    # Affinity stars: prioritize exact SKU overlap, then shared incumbent
-    # source types.  Both expose interactions hidden from binary subproblems.
+    # Estrellas de afinidad: se prioriza el solapamiento exacto de SKU y luego
+    # los tipos origen compartidos de la incumbente. Ambos revelan interacciones
+    # ocultas para los subproblemas binarios.
     requested_sizes = tuple(sorted({min_destinations, max_destinations}))
     for seed in ranked:
         partners = [item for item in ranked if item is not seed]
@@ -200,8 +201,8 @@ def build_multi_destination_work_items(
         for size in requested_sizes:
             raw.append(("overlap", tuple(ordered[:size])))
 
-    # Connected components of the destination graph.  An edge represents a
-    # shared movable SKU; components are split into bounded ranked chunks.
+    # Componentes conexos del grafo de destinos. Una arista representa un SKU
+    # móvil compartido; los componentes se dividen en bloques ordenados y acotados.
     adjacency: dict[str, set[str]] = {item.destination_id: set() for item in ranked}
     by_id = {item.destination_id: item for item in ranked}
     for index, left in enumerate(ranked):
@@ -231,8 +232,8 @@ def build_multi_destination_work_items(
             if len(chunk) >= min_destinations:
                 raw.append(("component", chunk))
 
-    # Tier/source bundles target simultaneous consolidation at destinations
-    # while allowing the solver to account for deterioration of shared sources.
+    # Los grupos tier/origen buscan consolidación simultánea en destinos y permiten
+    # que el solucionador considere el deterioro de orígenes compartidos.
     tier_destinations = tuple(item for item in ranked if item.tier_crossings > 0)
     for seed in tier_destinations:
         partners = [item for item in tier_destinations if item is not seed]
@@ -248,8 +249,8 @@ def build_multi_destination_work_items(
         if len(members) >= min_destinations:
             raw.append(("tier_source", members))
 
-    # Ranked windows preserve strong globally scored destinations even when
-    # they have no direct graph link.  Sliding by half a window adds diversity.
+    # Las ventanas ordenadas preservan destinos sólidos en el ranking global aun
+    # sin enlace directo en el grafo. Desplazarlas media ventana añade diversidad.
     for size in requested_sizes:
         stride = max(1, size // 2)
         for start in range(0, len(ranked) - size + 1, stride):
@@ -285,9 +286,9 @@ def build_multi_destination_work_items(
         seen.add(member_key)
         unique_by_kind[source_kind].append(neighborhood)
 
-    # Round-robin the discovery strategies so a global cap cannot silently
-    # exclude components or tier bundles merely because overlap stars were
-    # generated first.
+    # Se alternan las estrategias de descubrimiento para que un límite global no
+    # excluya silenciosamente componentes o grupos de tier porque las estrellas
+    # de solapamiento se generaron primero.
     unique: list[MultiDestinationWorkItem] = []
     for index in range(max((len(items) for items in unique_by_kind.values()), default=0)):
         for source_kind in ("overlap", "component", "tier_source", "ranked_window"):
@@ -302,10 +303,10 @@ def build_multi_destination_work_items(
 def allowed_internals_for_neighborhood(
     item: MultiDestinationWorkItem,
 ) -> dict[str, tuple[Dimensions, ...]]:
-    """Return every compatible destination for each released SKU.
+    """Devuelve cada destino compatible para cada SKU liberado.
 
-    The incumbent is intentionally absent here because the optimizer adds it
-    to every supplied SKU restriction and therefore guarantees a safe fallback.
+    La incumbente se omite intencionalmente porque el optimizador la agrega a
+    cada restricción de SKU y garantiza así un respaldo factible.
     """
 
     choices: dict[str, set[Dimensions]] = {code: set() for code in item.product_codes}

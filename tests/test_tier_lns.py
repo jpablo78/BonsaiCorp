@@ -35,7 +35,7 @@ class TierLnsWorkItemTests(unittest.TestCase):
             _neighborhood("star_0001", ("B", "C"), "star"),
             _neighborhood("star_0002", ("D",), "star"),
         )
-        # This component duplicates the union of the first two stars.
+    # Este componente duplica la unión de las dos primeras estrellas.
         components = (
             _neighborhood("component_0000", ("A", "B", "C"), "component"),
             _neighborhood("component_0001", ("D",), "component"),

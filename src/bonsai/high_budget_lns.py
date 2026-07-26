@@ -1,11 +1,11 @@
-"""Budget-aware destination ranking for high-pallet SCIP neighborhoods.
+"""Ranking de destinos con presupuesto para vecindarios SCIP de muchos pallets.
 
-The ordinary destination ranking scores the hypothetical move of every
-compatible SKU.  That is deliberately conservative for low-capacity designs:
-a useful subset can be hidden behind the freight cost of many irrelevant
-SKUs.  This module builds an optimistic subset under the *same global pallet
-budget* used by the exact solvers and is intended only to choose an LNS pool;
-SCIP and the independent evaluator remain authoritative for acceptance.
+El ranking usual de destinos puntúa el movimiento hipotético de cada SKU
+compatible. Es deliberadamente conservador para diseños de baja capacidad: un
+subconjunto útil puede quedar oculto tras el flete de SKU irrelevantes. Este
+módulo construye un subconjunto optimista bajo el *mismo presupuesto global de
+pallets* que usan los solucionadores exactos y sólo selecciona un conjunto LNS;
+SCIP y el evaluador independiente siguen siendo la autoridad de aceptación.
 """
 
 from __future__ import annotations
@@ -52,13 +52,13 @@ def rank_budget_destinations(
     min_optimistic_packaging_saving_mills: int = 0,
     max_destinations: int | None = None,
 ) -> tuple[BudgetDestinationRank, ...]:
-    """Rank destinations by an optimistic, pallet-budgeted subset move.
+    """Ordena destinos por un movimiento parcial optimista limitado por pallets.
 
-    For each destination we price compatible SKUs at the tier attainable if
-    every compatible SKU moved there.  We then greedily retain positive-net
-    SKU moves within the remaining global pallet budget.  Source-tier
-    deterioration and target-tier activation are intentionally relaxed, so
-    the score is an upper-bound-style search signal, not a feasible saving.
+    Para cada destino se valoran SKU compatibles en el tier alcanzable si todos
+    se movieran allí. Luego se retienen vorazmente movimientos de beneficio neto
+    positivo dentro del presupuesto global de pallets. Se relajan
+    deliberadamente el deterioro de tiers origen y la activación de tiers
+    destino; el puntaje es una señal de búsqueda tipo cota superior, no ahorro factible.
     """
 
     if max_extra_pallets < 0:
@@ -135,8 +135,9 @@ def rank_budget_destinations(
                 (packaging_saving - freight_delta, pallet_delta, packaging_saving, product.code)
             )
 
-        # Free/saving pallet moves first, then positive-pallet moves by their
-        # estimated net return per pallet.  Deterministic ties make runs auditable.
+    # Primero movimientos sin pallets adicionales o que los ahorran; luego,
+    # movimientos positivos por retorno neto estimado por pallet. Los empates
+    # deterministas hacen auditables las corridas.
         choices.sort(
             key=lambda item: (
                 item[1] > 0,
@@ -188,7 +189,7 @@ def restrictions_for_ranked_pool(
     incumbent_assignment: Mapping[str, CandidateBox],
     exact_candidates: Iterable[CandidateBox],
 ) -> tuple[frozenset[str], dict[str, tuple[Dimensions, ...]]]:
-    """Build SCIP LNS restrictions from ranked destinations plus used designs."""
+    """Construye restricciones LNS de SCIP desde destinos ordenados y diseños usados."""
 
     selected = tuple(ranked)
     pool = {item.candidate.internal for item in selected}

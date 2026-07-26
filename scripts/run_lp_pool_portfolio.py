@@ -1,4 +1,4 @@
-"""Run several LP-guided exact-pool searches concurrently and validate them."""
+"""Ejecuta en paralelo varias búsquedas de conjuntos exactos guiadas por LP y las valida."""
 
 from __future__ import annotations
 
@@ -31,8 +31,8 @@ def _worker(
     seed: int,
     pool_sizes: tuple[int, ...],
 ):
-    # Imported in the spawned child so Windows does not execute the runner at
-    # module-import time in the parent process.
+# Se importa en el proceso hijo para que Windows no ejecute el runner al
+# importar el módulo en el proceso padre.
     import sys
 
     sys.path.insert(0, str(Path(__file__).parent))

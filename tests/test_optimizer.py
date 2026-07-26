@@ -382,8 +382,8 @@ class OptimizerIncumbentTests(unittest.TestCase):
                 initial_assignment=incumbent,
                 candidate_strategy="exact",
                 free_product_codes={"P1"},
-                # The incumbent is intentionally omitted: the optimizer must
-                # add it automatically to protect the fallback.
+    # La incumbente se omite intencionalmente: el optimizador debe agregarla
+    # automáticamente para proteger la alternativa de respaldo.
                 allowed_internals_by_product={"P1": {target.internal}},
             )
 

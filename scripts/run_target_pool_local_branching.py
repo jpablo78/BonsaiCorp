@@ -1,4 +1,4 @@
-"""Exact local branching over a compact, auditable target-design pool.
+"""Ramificación local exacta sobre un conjunto compacto y auditable de diseños objetivo.
 
 The pool contains the incumbent, each SKU's best exact one-SKU alternatives,
 and active physical box types that are closest to a documented Procurement
@@ -60,9 +60,9 @@ def _build_allowed_pool(
         for code in candidate.compatible_product_codes:
             by_code[code].append(candidate)
 
-    # The exact incremental deltas rank alternatives, including their current
-    # Procurement effect across all plants.  They do not approximate what the
-    # later MIP optimizes.
+# Los deltas incrementales exactos ordenan alternativas, incluido su efecto
+# actual en Procurement en todas las plantas. No aproximan lo que optimiza
+# posteriormente el MIP.
     allowed: dict[str, set[Dimensions]] = {
         product.code: {assignment[product.code].internal} for product in data.products
     }

@@ -1,4 +1,4 @@
-"""Run an LP-guided sequence of restricted exact SCIP masters."""
+"""Ejecuta una secuencia guiada por LP de maestros SCIP exactos restringidos."""
 
 from __future__ import annotations
 

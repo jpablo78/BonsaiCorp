@@ -1,4 +1,4 @@
-"""Exact SCIP repairs for coordinated Procurement-tier moves.
+"""Reparaciones SCIP exactas para movimientos coordinados de tiers de Procurement.
 
 Each repair frees a deliberately different set of SKUs but gives every freed
 SKU the complete documented 3-mm candidate universe.  The target tier signals
@@ -81,7 +81,7 @@ def _pallet_audit(
     candidates: tuple[CandidateBox, ...],
     max_extra_pallets: int,
 ) -> dict[str, int]:
-    """Report the search-only pallet cap without treating it as a business rule."""
+    """Informa el límite de pallets sólo de búsqueda sin tratarlo como regla de negocio."""
 
     minimum_total = 0
     current_total = 0
@@ -125,7 +125,7 @@ def _move_options(
     incumbent: dict[str, CandidateBox],
     candidate_by_internal: dict[Dimensions, CandidateBox],
 ) -> list[tuple[float, int, int, str]]:
-    """Rank potential incoming SKUs for one target type/plant.
+    """Ordena SKU potencialmente entrantes para un tipo/planta objetivo.
 
     The score is intentionally only a selector.  It credits the fractional
     threshold saving that a SKU could unlock and charges only its direct freight
@@ -167,8 +167,8 @@ def _select_codes(
 ) -> frozenset[str]:
     if max_free_skus < 1:
         raise ValueError("max_free_skus must be positive")
-    # When a target already has many users, retain the economically strongest
-    # ones first.  This avoids a hidden expansion beyond the stated MIP size.
+    # Cuando un objetivo ya tiene muchos usuarios, se retienen primero los más
+    # sólidos económicamente. Así se evita una expansión oculta del MIP declarado.
     ordered_mandatory = sorted(
         mandatory, key=lambda code: (-scores.get(code, 0.0), code)
     )
@@ -210,8 +210,8 @@ def _build_neighborhood(
         }
 
     if kind == "crossplant":
-        # Aggregate a SKU's contribution to every selected target/plant,
-        # favouring boxes that can jointly improve more than one geography.
+    # Agrega la contribución de un SKU a cada tipo/planta objetivo seleccionada y
+    # favorece cajas que pueden mejorar conjuntamente más de una geografía.
         chosen = exposures[:24]
         scores: dict[str, float] = defaultdict(float)
         mandatory: set[str] = set()

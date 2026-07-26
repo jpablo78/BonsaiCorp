@@ -1,4 +1,4 @@
-"""Restricted multi-destination LNS solved with one-thread SCIP subproblems.
+"""LNS restringido multidestino resuelto con subproblemas SCIP de un hilo.
 
 This runner shares the destination ranking and neighbourhood construction with
 ``multi_destination_lns`` but sends each incumbent-or-destinations model to the
@@ -281,8 +281,8 @@ def run_scip_multi_destination_lns(args: argparse.Namespace) -> dict[str, object
                 if target_mills is not None and incumbent.costs.total_mills <= target_mills:
                     termination = "target_met"
                     break
-                # Re-rank immediately after an improvement: destination and
-                # source economics changed, so the remaining list is stale.
+    # Se reordena inmediatamente tras una mejora: cambió la economía de destinos
+    # y orígenes, por lo que la lista restante quedó desactualizada.
                 if improved_this_round:
                     break
             if termination == "target_met":

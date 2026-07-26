@@ -1,4 +1,4 @@
-"""Stochastic adaptive large-neighbourhood search with short SCIP repairs.
+"""Búsqueda adaptativa estocástica de gran vecindario con reparaciones SCIP breves.
 
 The deterministic destination and tier neighbourhoods are useful once, but
 repeating the same ranked pools from a strong incumbent quickly becomes
@@ -55,7 +55,7 @@ T = TypeVar("T")
 
 @dataclass(frozen=True)
 class RandomNeighborhood:
-    """A stochastic restricted master problem.
+    """Un problema maestro restringido y estocástico.
 
     ``product_codes`` is exactly the union of ``source_types`` in the state
     from which the neighbourhood was built.  Consequently a source type is
@@ -85,7 +85,7 @@ class RandomNeighborhood:
     def allowed_internals(
         self, assignment: Mapping[str, CandidateBox]
     ) -> dict[str, tuple[Dimensions, ...]]:
-        """Return incumbent plus every sampled compatible destination per SKU."""
+        """Devuelve la incumbente y cada destino compatible muestreado por SKU."""
 
         allowed: dict[str, set[Dimensions]] = {
             code: {assignment[code].internal} for code in self.product_codes
@@ -110,7 +110,7 @@ class RuinResult:
 def _weighted_sample_without_replacement(
     items: Sequence[T], weights: Sequence[float], count: int, rng: random.Random
 ) -> tuple[T, ...]:
-    """Sample without replacement while tolerating zero/invalid weights."""
+    """Muestrea sin reposición y tolera pesos nulos o inválidos."""
 
     if len(items) != len(weights):
         raise ValueError("items and weights must have equal length")
@@ -169,7 +169,7 @@ def _volumes_by_type(
 
 
 def _tier_proximity(volumes: Mapping[str, int]) -> float:
-    """Smooth preference for types near any documented discount threshold."""
+    """Preferencia suave por tipos próximos a cualquier umbral de descuento documentado."""
 
     score = 1.0
     thresholds = tuple(tier.lower_inclusive for tier in DISCOUNT_TIERS[1:])
@@ -177,7 +177,7 @@ def _tier_proximity(volumes: Mapping[str, int]) -> float:
         if volume <= 0:
             continue
         nearest = min(abs(volume - threshold) for threshold in thresholds)
-        # The cap prevents an exactly-on-tier type from monopolising sampling.
+    # El límite evita que un tipo exactamente en un tier monopolice el muestreo.
         score += min(20.0, 20_000.0 / (nearest + 1_000.0))
     return score
 
@@ -218,9 +218,9 @@ def _destination_weight(
                 crossings += 1
                 closeness += threshold / max(threshold - before, 1)
 
-    # Positive pallet deltas are deliberately not forbidden: the global USD
-    # objective decides whether a procurement tier compensates for them.  A
-    # modest preference for freight-saving destinations improves repair speed.
+    # Los deltas positivos de pallets no se prohíben deliberadamente: el objetivo
+    # global en USD decide si un tier de Procurement los compensa. Una preferencia
+    # moderada por destinos que ahorran flete acelera la reparación.
     pallet_saving = 0
     for code in compatible:
         product = products_by_code[code]
@@ -256,7 +256,7 @@ def build_random_neighborhood(
     max_skus: int = 140,
     tier_guided_probability: float = 0.70,
 ) -> RandomNeighborhood:
-    """Create a fresh connected-ish random neighbourhood.
+    """Crea un vecindario aleatorio nuevo y aproximadamente conexo.
 
     The first source group seeds an exact destination anchor.  Additional full
     source groups are biased toward products compatible with that anchor, but
@@ -360,8 +360,8 @@ def build_random_neighborhood(
         selected_codes.update(groups[chosen])
         remaining_types.remove(chosen)
 
-    # If large early groups made the random target unreachable, fill with the
-    # smallest complete groups.  We still never split a source type.
+    # Si grupos grandes iniciales volvieron inalcanzable el objetivo aleatorio,
+    # se completa con los grupos completos más pequeños. Nunca se divide un tipo origen.
     if len(selected_types) < min_source_types:
         for key in sorted(remaining_types, key=lambda item: (len(groups[item]), item)):
             if len(selected_codes) + len(groups[key]) > max_skus:
@@ -395,9 +395,9 @@ def build_random_neighborhood(
         for candidate in destination_pool
     }
 
-    # Randomised set cover: prioritise choices that give a SKU an alternative
-    # to its current type.  The stochastic weight prevents this from becoming
-    # another fixed, repeatedly exhausted destination ranking.
+    # Cobertura de conjuntos aleatorizada: prioriza elecciones que dan al SKU una
+    # alternativa a su tipo actual. El peso estocástico evita que se convierta en
+    # otro ranking fijo de destinos agotado repetidamente.
     uncovered = set(selected_codes)
     selected_destinations: list[CandidateBox] = []
     remaining_destinations = list(destination_pool)
@@ -440,7 +440,7 @@ def build_random_neighborhood(
             )
         )
 
-    # Recalculate actual uncovered products after all fill destinations.
+    # Recalcula los productos realmente no cubiertos después de todos los destinos de relleno.
     movable = set()
     for candidate in selected_destinations:
         target_type = box_type_key(candidate)
@@ -474,7 +474,7 @@ def ruin_assignment(
     max_pallets: int,
     proposal_temperature_usd: float = 5_000.0,
 ) -> RuinResult:
-    """Apply feasible stochastic moves before SCIP recreates the neighbourhood."""
+    """Aplica movimientos estocásticos factibles antes de que SCIP recree el vecindario."""
 
     if not 0 <= move_fraction <= 1:
         raise ValueError("move_fraction must be between zero and one")
@@ -504,8 +504,8 @@ def ruin_assignment(
         if not moves:
             continue
         attempted += 1
-        # A softmax over exact deltas makes destructive moves varied but avoids
-        # spending most short SCIP calls merely undoing catastrophic freight.
+    # Un softmax sobre deltas exactos diversifica movimientos destructivos, pero
+    # evita gastar la mayoría de llamadas breves a SCIP deshaciendo flete catastrófico.
         minimum_delta = min(move.total_delta_mills for move in moves)
         scale_mills = max(proposal_temperature_usd * 1000.0, 1.0)
         weights = [
@@ -579,7 +579,7 @@ def _neighborhood_payload(item: RandomNeighborhood) -> dict[str, object]:
 
 
 def run_random_alns(args: argparse.Namespace) -> dict[str, object]:
-    """Run several stochastic SCIP trajectories within one wall-clock budget."""
+    """Ejecuta varias trayectorias estocásticas SCIP dentro de un presupuesto de tiempo real."""
 
     if args.duration_seconds <= 0:
         raise ValueError("--duration-seconds must be positive")
@@ -661,8 +661,8 @@ def run_random_alns(args: argparse.Namespace) -> dict[str, object]:
         now = time.perf_counter()
         if now >= deadline:
             break
-        # Reserve an equal share of the remaining time for every remaining
-        # seed.  Each new trajectory starts from the best validated incumbent.
+    # Reserva una fracción igual del tiempo restante para cada semilla pendiente.
+    # Cada nueva trayectoria empieza desde la mejor incumbente validada.
         run_deadline = now + (deadline - now) / (args.runs - run_index)
         seed = args.random_seed + run_index * 1_000_003
         rng = random.Random(seed)
@@ -689,9 +689,9 @@ def run_random_alns(args: argparse.Namespace) -> dict[str, object]:
                 args.proposal_temperature_final_usd,
                 progress,
             )
-            # The admissible excursion cools continuously.  A state accepted
-            # under yesterday's wider cap can therefore sit outside the new
-            # cap even before the next ruin applies a move.
+    # La excursión admisible se enfría continuamente. Por eso un estado aceptado
+    # bajo un límite anterior más amplio puede quedar fuera del nuevo límite antes
+    # de que la siguiente destrucción aplique un movimiento.
             if (
                 current_costs.total_mills
                 > best.costs.total_mills + round(excursion_usd * 1000)
@@ -741,8 +741,8 @@ def run_random_alns(args: argparse.Namespace) -> dict[str, object]:
             remaining = run_deadline - time.perf_counter()
             if remaining <= 0:
                 break
-            # Log-uniform solve times create many cheap probes while retaining
-            # occasional two-second repairs for the harder random ruins.
+    # Los tiempos de resolución log-uniformes generan muchas pruebas baratas y
+    # preservan reparaciones ocasionales de dos segundos para destrucciones difíciles.
             low = args.time_per_neighborhood_min
             high = min(args.time_per_neighborhood_max, max(remaining, low))
             solve_seconds = (
